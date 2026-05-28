@@ -16,16 +16,23 @@ interface SendFinishedParams {
 export async function sendFinishedNotification(params: SendFinishedParams): Promise<void> {
   const vars = buildTemplateVars(params.clientName, params.points, params.dnrTag, BUSINESS_NAME)
 
-  await sendEmail({
+  const emailResult = await sendEmail({
     to: params.clientEmail,
     subject: renderTemplate(params.emailTemplate.subject, vars),
     body: renderTemplate(params.emailTemplate.body, vars),
   })
 
+  if (!emailResult.success) {
+    console.error('[send-finished] email notification failed for:', params.clientEmail)
+  }
+
   if (params.clientPhone) {
-    await sendSms({
+    const smsResult = await sendSms({
       to: params.clientPhone,
       body: renderTemplate(params.smsTemplate.body, vars),
     })
+    if (!smsResult.success) {
+      console.error('[send-finished] SMS notification failed for:', params.clientPhone)
+    }
   }
 }
