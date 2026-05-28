@@ -10,14 +10,21 @@ export function ProfileForm({ profile }: { profile: Profile }) {
   const [address, setAddress] = useState(profile.address ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
-    await updateClientProfile(profile.id, { name, phone, address })
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    setError(null)
+    try {
+      await updateClientProfile(profile.id, { name, phone, address })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save profile')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -36,6 +43,9 @@ export function ProfileForm({ profile }: { profile: Profile }) {
           />
         </div>
       ))}
+      {error && (
+        <p className="text-sm text-red-600">{error}</p>
+      )}
       <button
         type="submit"
         disabled={saving}
