@@ -38,7 +38,11 @@ export async function updateClientProfile(
   updates: { name?: string; phone?: string; address?: string }
 ) {
   const supabase = await createClient()
-  const { error } = await supabase.from('profiles').update(updates).eq('id', clientId)
+  const { error } = await supabase.from('profiles').update({
+    name: updates.name,
+    phone: updates.phone,
+    address: updates.address,
+  }).eq('id', clientId)
   if (error) throw new Error(error.message)
   revalidatePath(`/admin/clients/${clientId}`)
   revalidatePath('/portal/profile')
