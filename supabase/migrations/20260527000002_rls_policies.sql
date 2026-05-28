@@ -9,7 +9,7 @@ returns boolean as $$
     select 1 from public.profiles
     where id = auth.uid() and role = 'admin'
   );
-$$ language sql security definer stable;
+$$ language sql security definer stable set search_path = public, pg_catalog;
 
 -- Profiles: users see own; admins see all
 create policy "users read own profile"
