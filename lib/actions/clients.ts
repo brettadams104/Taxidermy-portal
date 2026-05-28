@@ -14,22 +14,20 @@ export interface CreateClientInput {
 export async function createClientAccount(input: CreateClientInput) {
   const adminClient = createAdminClient()
 
-  const { data, error: createError } = await adminClient.auth.admin.createUser({
-    email: input.email,
-    email_confirm: true,
-    user_metadata: { role: 'client' },
-  })
-  if (createError) throw new Error(createError.message)
+  // inviteUserByEmail creates the user AND sends a "Set up your account" email automatically
+  const { data, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
+    input.email,
+    { data: { role: 'client' } }
+  )
+  if (inviteError) throw new Error(inviteError.message)
 
+  // Update profile with optional contact info (profile row auto-created by DB trigger)
   if (input.name || input.phone || input.address) {
     await adminClient
       .from('profiles')
       .update({ name: input.name, phone: input.phone, address: input.address })
       .eq('id', data.user.id)
   }
-
-  // Send a password setup link to the new client
-  await adminClient.auth.admin.generateLink({ type: 'recovery', email: input.email })
 
   revalidatePath('/admin/clients')
   return { userId: data.user.id }

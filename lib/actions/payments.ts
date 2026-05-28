@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 
 export async function logPayment(skullId: string, amount: number) {
+  if (amount <= 0) throw new Error('Payment amount must be greater than zero')
   const supabase = await createClient()
 
   const { data: skull, error: fetchError } = await supabase

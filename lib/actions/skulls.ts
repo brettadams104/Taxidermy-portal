@@ -58,11 +58,13 @@ export async function advanceSkullStatus(skullId: string) {
     const { data: { user } } = await adminClient.auth.admin.getUserById(skull.client_id)
     const email = user?.email
 
-    const { data: templates } = await supabase.from('notification_templates').select('*')
+    const { data: templates } = await supabase.from('notification_templates').select('*').in('type', ['email', 'sms'])
     const emailTemplate = templates?.find(t => t.type === 'email')
     const smsTemplate = templates?.find(t => t.type === 'sms')
 
-    if (email && emailTemplate && smsTemplate) {
+    if (!email || !emailTemplate || !smsTemplate) {
+      console.warn('[advanceSkullStatus] finished notification skipped: missing email, email template, or SMS template for skull', skullId)
+    } else {
       await sendFinishedNotification({
         clientEmail: email,
         clientPhone: skull.client?.phone ?? null,
