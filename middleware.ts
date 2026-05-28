@@ -27,11 +27,14 @@ export async function middleware(request: NextRequest) {
 
   let role: UserRole | null = null
   if (user) {
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
+    if (profileError) {
+      console.error('[middleware] profile fetch failed:', profileError.message)
+    }
     role = (profile?.role as UserRole) ?? null
   }
 
@@ -46,5 +49,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }

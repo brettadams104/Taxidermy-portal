@@ -30,4 +30,12 @@ describe('getRedirectPath', () => {
   it('allows clients to access /portal routes', () => {
     expect(getRedirectPath('client', '/portal')).toBeNull()
   })
+
+  it('redirects admin from /portal to /admin/dashboard', () => {
+    expect(getRedirectPath('admin', '/portal')).toBe('/admin/dashboard')
+  })
+
+  it('redirects authenticated admin away from /login', () => {
+    expect(getRedirectPath('admin', '/login')).toBe('/admin/dashboard')
+  })
 })
