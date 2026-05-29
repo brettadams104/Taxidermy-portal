@@ -1,12 +1,19 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { SKULL_STATUSES } from '@/lib/constants'
+import { SkullCard } from '@/components/skull-card'
+import type { Skull } from '@/lib/types'
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
 
   const { data: skulls } = await supabase.from('skulls').select('status, price, amount_paid')
   const { data: profiles } = await supabase.from('profiles').select('id').eq('role', 'client')
+  const { data: activeProjects } = await supabase
+    .from('skulls')
+    .select('*, profiles(name)')
+    .neq('status', 'Finished')
+    .order('created_at', { ascending: false })
 
   const totalClients = profiles?.length ?? 0
   const finishedCount = skulls?.filter(sk => sk.status === 'Finished').length ?? 0
@@ -62,6 +69,31 @@ export default async function AdminDashboardPage() {
             </li>
           ))}
         </ul>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="font-semibold text-lg">Current Projects</h2>
+        {!activeProjects?.length && (
+          <p className="text-gray-700 text-center py-8">No active projects.</p>
+        )}
+        {activeProjects?.map(project => {
+          const profile = project.profiles as { name: string | null } | null
+          const skull = project as unknown as Skull
+          return (
+            <div key={project.id} className="space-y-2">
+              <p className="text-sm font-medium text-gray-700 px-1">
+                {profile?.name ?? 'Unnamed Client'}
+              </p>
+              <SkullCard skull={skull} />
+              <Link
+                href={`/admin/skulls/${project.id}`}
+                className="block text-center text-sm border rounded-lg px-4 py-2 bg-white hover:bg-gray-50"
+              >
+                Manage
+              </Link>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
