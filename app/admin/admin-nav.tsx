@@ -43,6 +43,13 @@ export function AdminNav({ signOut }: Props) {
             Clients
           </Link>
           <Link
+            href="/admin/stats"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-3 text-sm hover:bg-gray-50 border-b"
+          >
+            Business Stats
+          </Link>
+          <Link
             href="/admin/settings/notifications"
             onClick={() => setOpen(false)}
             className="block px-4 py-3 text-sm hover:bg-gray-50 border-b"

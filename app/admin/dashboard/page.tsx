@@ -72,6 +72,14 @@ export default async function AdminDashboardPage() {
         </ul>
       </div>
 
+      <Link
+        href="/admin/stats"
+        className="flex items-center justify-between border rounded-xl px-4 py-3 bg-white shadow-sm hover:border-blue-400 transition-colors text-sm"
+      >
+        <span className="font-medium">Business Stats & Trends</span>
+        <span className="text-blue-600">View →</span>
+      </Link>
+
       <div className="space-y-3">
         <h2 className="font-semibold text-lg">Current Projects</h2>
         {!activeProjects?.length && (
