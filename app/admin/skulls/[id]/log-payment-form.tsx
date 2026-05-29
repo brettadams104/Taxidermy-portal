@@ -21,7 +21,7 @@ export function LogPaymentForm({ skullId }: { skullId: string }) {
   return (
     <form onSubmit={handleSubmit} className="flex gap-2">
       <div className="relative flex-1">
-        <span className="absolute left-3 top-2 text-gray-500 text-sm">$</span>
+        <span className="absolute left-3 top-2 text-gray-700 text-sm">$</span>
         <input
           type="number"
           min="0.01"

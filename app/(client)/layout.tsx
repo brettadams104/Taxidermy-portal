@@ -21,7 +21,7 @@ export default async function ClientLayout({ children }: { children: React.React
         <nav className="flex items-center gap-4 text-sm">
           <Link href="/portal/profile" className="text-gray-600 hover:text-gray-900">Profile</Link>
           <form action={signOut}>
-            <button type="submit" className="text-gray-400 hover:text-gray-900">Sign Out</button>
+            <button type="submit" className="text-gray-600 hover:text-gray-900">Sign Out</button>
           </form>
         </nav>
       </header>

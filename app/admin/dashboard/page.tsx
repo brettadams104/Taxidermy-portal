@@ -29,11 +29,11 @@ export default async function AdminDashboardPage() {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="border rounded-xl p-4 bg-white shadow-sm">
-          <p className="text-gray-500 text-sm">Total Clients</p>
+          <p className="text-gray-700 text-sm">Total Clients</p>
           <p className="text-3xl font-bold">{totalClients}</p>
         </div>
         <div className="border rounded-xl p-4 bg-white shadow-sm">
-          <p className="text-gray-500 text-sm">Outstanding Balance</p>
+          <p className="text-gray-700 text-sm">Outstanding Balance</p>
           <p className="text-3xl font-bold">${totalOutstanding.toFixed(2)}</p>
         </div>
       </div>

@@ -28,9 +28,9 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold">{profile.name ?? 'Unnamed Client'}</h1>
-          <p className="text-sm text-gray-500">{user?.email}</p>
-          {profile.phone && <p className="text-sm text-gray-500">{profile.phone}</p>}
-          {profile.address && <p className="text-sm text-gray-500">{profile.address}</p>}
+          <p className="text-sm text-gray-700">{user?.email}</p>
+          {profile.phone && <p className="text-sm text-gray-700">{profile.phone}</p>}
+          {profile.address && <p className="text-sm text-gray-700">{profile.address}</p>}
         </div>
         <Link
           href={`/admin/clients/${id}/skulls/new`}
@@ -41,7 +41,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       </div>
 
       {!skulls?.length && (
-        <p className="text-gray-500 text-center py-8">No skulls yet.</p>
+        <p className="text-gray-700 text-center py-8">No skulls yet.</p>
       )}
 
       <div className="space-y-4">

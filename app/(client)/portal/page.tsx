@@ -17,7 +17,7 @@ export default async function ClientPortalPage() {
       <h1 className="text-2xl font-bold">My Projects</h1>
 
       {!skulls?.length && (
-        <p className="text-gray-500 text-center py-8">
+        <p className="text-gray-700 text-center py-8">
           No projects yet — your skulls will appear here once checked in.
         </p>
       )}

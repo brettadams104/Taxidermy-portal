@@ -25,7 +25,7 @@ export default async function ClientsPage() {
       </div>
 
       {!profiles?.length && (
-        <p className="text-gray-500 text-center py-8">No clients yet.</p>
+        <p className="text-gray-700 text-center py-8">No clients yet.</p>
       )}
 
       <ul className="space-y-3">
@@ -41,8 +41,8 @@ export default async function ClientsPage() {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="font-semibold">{profile.name ?? 'Unnamed Client'}</p>
-                    <p className="text-sm text-gray-500">{emailMap[profile.id]}</p>
-                    {profile.phone && <p className="text-sm text-gray-500">{profile.phone}</p>}
+                    <p className="text-sm text-gray-700">{emailMap[profile.id]}</p>
+                    {profile.phone && <p className="text-sm text-gray-700">{profile.phone}</p>}
                   </div>
                   <span className="text-sm text-blue-600 font-medium">{activeCount} active</span>
                 </div>

@@ -11,7 +11,7 @@ export default async function ProfilePage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">My Profile</h1>
-      <p className="text-sm text-gray-500">{user.email}</p>
+      <p className="text-sm text-gray-700">{user.email}</p>
       {profile && <ProfileForm profile={profile} />}
     </div>
   )

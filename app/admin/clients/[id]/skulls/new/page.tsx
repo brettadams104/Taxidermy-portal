@@ -68,7 +68,7 @@ export default function NewSkullPage() {
         <div>
           <label className="block text-sm font-medium mb-1">Price (optional)</label>
           <div className="relative">
-            <span className="absolute left-3 top-2 text-gray-500">$</span>
+            <span className="absolute left-3 top-2 text-gray-700">$</span>
             <input
               name="price"
               type="number"

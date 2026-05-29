@@ -18,9 +18,9 @@ export function SkullCard({ skull }: SkullCardProps) {
             {skull.points ? `${skull.points}-Point Skull` : 'Skull'}
           </p>
           {skull.dnr_tag_number && (
-            <p className="text-sm text-gray-500">DNR Tag: {skull.dnr_tag_number}</p>
+            <p className="text-sm text-gray-700">DNR Tag: {skull.dnr_tag_number}</p>
           )}
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-700">
             Received: {new Date(skull.date_received).toLocaleDateString()}
           </p>
         </div>
@@ -31,7 +31,7 @@ export function SkullCard({ skull }: SkullCardProps) {
               <p className="text-orange-600">Balance: ${balance.toFixed(2)}</p>
             )}
             {balance === 0 && <p className="text-green-600">Paid in Full</p>}
-            {paymentLabel && <p className="text-gray-400 text-xs">{paymentLabel}</p>}
+            {paymentLabel && <p className="text-gray-600 text-xs">{paymentLabel}</p>}
           </div>
         )}
       </div>
