@@ -58,6 +58,14 @@ export default async function AdminDashboardPage() {
         </Link>
       </div>
 
+      <Link
+        href="/admin/stats"
+        className="flex items-center justify-between border rounded-xl px-4 py-3 bg-white shadow-sm hover:border-blue-400 transition-colors text-sm"
+      >
+        <span className="font-medium">Business Stats & Trends</span>
+        <span className="text-blue-600">View →</span>
+      </Link>
+
       <div className="border rounded-xl bg-white shadow-sm overflow-hidden">
         <div className="px-4 py-3 border-b">
           <h2 className="font-semibold">Projects by Stage</h2>
@@ -71,14 +79,6 @@ export default async function AdminDashboardPage() {
           ))}
         </ul>
       </div>
-
-      <Link
-        href="/admin/stats"
-        className="flex items-center justify-between border rounded-xl px-4 py-3 bg-white shadow-sm hover:border-blue-400 transition-colors text-sm"
-      >
-        <span className="font-medium">Business Stats & Trends</span>
-        <span className="text-blue-600">View →</span>
-      </Link>
 
       <div className="space-y-3">
         <h2 className="font-semibold text-lg">Current Projects</h2>
