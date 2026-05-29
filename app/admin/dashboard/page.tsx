@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { SKULL_STATUSES } from '@/lib/constants'
 import { SkullCard } from '@/components/skull-card'
-import type { Skull } from '@/lib/types'
+import { AdvanceStatusButton } from '@/app/admin/clients/[id]/advance-status-button'
+import type { Skull, SkullStatus } from '@/lib/types'
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
@@ -85,12 +86,15 @@ export default async function AdminDashboardPage() {
                 {profile?.name ?? 'Unnamed Client'}
               </p>
               <SkullCard skull={skull} />
-              <Link
-                href={`/admin/skulls/${project.id}`}
-                className="block text-center text-sm border rounded-lg px-4 py-2 bg-white hover:bg-gray-50"
-              >
-                Manage
-              </Link>
+              <div className="flex gap-2">
+                <AdvanceStatusButton skullId={project.id} currentStatus={project.status as SkullStatus} />
+                <Link
+                  href={`/admin/skulls/${project.id}`}
+                  className="shrink-0 text-sm border rounded-lg px-4 py-2 bg-white hover:bg-gray-50"
+                >
+                  Manage
+                </Link>
+              </div>
             </div>
           )
         })}
