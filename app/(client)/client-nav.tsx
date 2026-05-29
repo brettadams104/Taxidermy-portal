@@ -36,6 +36,13 @@ export function ClientNav({ signOut }: Props) {
       {open && (
         <div className="absolute right-0 top-full mt-2 w-44 bg-white border rounded-xl shadow-lg overflow-hidden z-20">
           <Link
+            href="/portal/about"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-3 text-sm hover:bg-gray-50 border-b"
+          >
+            About Us
+          </Link>
+          <Link
             href="/portal/profile"
             onClick={() => setOpen(false)}
             className="block px-4 py-3 text-sm hover:bg-gray-50 border-b"
