@@ -9,6 +9,8 @@ export default async function AdminDashboardPage() {
   const { data: profiles } = await supabase.from('profiles').select('id').eq('role', 'client')
 
   const totalClients = profiles?.length ?? 0
+  const finishedCount = skulls?.filter(sk => sk.status === 'Finished').length ?? 0
+  const inProgressCount = skulls?.filter(sk => sk.status !== 'Finished').length ?? 0
   const statusCounts = SKULL_STATUSES.reduce<Record<string, number>>((acc, s) => {
     acc[s] = skulls?.filter(sk => sk.status === s).length ?? 0
     return acc
@@ -28,14 +30,24 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="border rounded-xl p-4 bg-white shadow-sm">
+        <Link href="/admin/clients" className="border rounded-xl p-4 bg-white shadow-sm hover:border-blue-400 transition-colors">
           <p className="text-gray-700 text-sm">Total Clients</p>
           <p className="text-3xl font-bold">{totalClients}</p>
-        </div>
+          <p className="text-xs text-blue-600 mt-1">View all →</p>
+        </Link>
         <div className="border rounded-xl p-4 bg-white shadow-sm">
           <p className="text-gray-700 text-sm">Outstanding Balance</p>
           <p className="text-3xl font-bold">${totalOutstanding.toFixed(2)}</p>
         </div>
+        <div className="border rounded-xl p-4 bg-white shadow-sm">
+          <p className="text-gray-700 text-sm">In Progress</p>
+          <p className="text-3xl font-bold">{inProgressCount}</p>
+        </div>
+        <Link href="/admin/skulls/finished" className="border rounded-xl p-4 bg-white shadow-sm hover:border-blue-400 transition-colors">
+          <p className="text-gray-700 text-sm">Finished Skulls</p>
+          <p className="text-3xl font-bold">{finishedCount}</p>
+          <p className="text-xs text-blue-600 mt-1">View all →</p>
+        </Link>
       </div>
 
       <div className="border rounded-xl bg-white shadow-sm overflow-hidden">
@@ -51,10 +63,6 @@ export default async function AdminDashboardPage() {
           ))}
         </ul>
       </div>
-
-      <Link href="/admin/clients" className="block text-center text-blue-600 hover:underline text-sm">
-        View all clients →
-      </Link>
     </div>
   )
 }
