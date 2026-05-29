@@ -32,12 +32,20 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           {profile.phone && <p className="text-sm text-gray-700">{profile.phone}</p>}
           {profile.address && <p className="text-sm text-gray-700">{profile.address}</p>}
         </div>
-        <Link
-          href={`/admin/clients/${id}/skulls/new`}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 shrink-0"
-        >
-          + Add Skull
-        </Link>
+        <div className="flex gap-2 shrink-0">
+          <Link
+            href={`/admin/clients/${id}/edit`}
+            className="border px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50"
+          >
+            Edit
+          </Link>
+          <Link
+            href={`/admin/clients/${id}/skulls/new`}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+          >
+            + Add Skull
+          </Link>
+        </div>
       </div>
 
       {!skulls?.length && (
