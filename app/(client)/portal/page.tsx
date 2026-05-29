@@ -14,11 +14,11 @@ export default async function ClientPortalPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">My Projects</h1>
+      <h1 className="text-2xl font-bold">My Skulls</h1>
 
       {!skulls?.length && (
         <p className="text-gray-700 text-center py-8">
-          No projects yet — your skulls will appear here once checked in.
+          No skulls yet — your skulls will appear here once checked in.
         </p>
       )}
 
