@@ -25,12 +25,12 @@ export function AdminNav({ signOut }: Props) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(o => !o)}
-        className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+        className="p-2 rounded-lg hover:bg-white/10 transition-colors"
         aria-label="Menu"
       >
-        <span className="block w-5 h-0.5 bg-gray-700 mb-1" />
-        <span className="block w-5 h-0.5 bg-gray-700 mb-1" />
-        <span className="block w-5 h-0.5 bg-gray-700" />
+        <span className="block w-5 h-0.5 bg-white mb-1" />
+        <span className="block w-5 h-0.5 bg-white mb-1" />
+        <span className="block w-5 h-0.5 bg-white" />
       </button>
 
       {open && (
