@@ -19,8 +19,10 @@ export interface AddSkullInput {
 
 export async function addSkull(input: AddSkullInput) {
   const supabase = await createClient()
-  const amountPaid = input.paymentOption === 'full_upfront' && input.price != null
+  const amountPaid = input.price != null && input.paymentOption === 'full_upfront'
     ? input.price
+    : input.price != null && input.paymentOption === 'half_upfront'
+    ? Math.round(input.price / 2 * 100) / 100
     : 0
   const { error } = await supabase.from('skulls').insert({
     client_id: input.clientId,
@@ -47,9 +49,11 @@ export async function updateSkull(skullId: string, input: {
   const supabase = await createClient()
   const { data: skull } = await supabase.from('skulls').select('client_id').eq('id', skullId).single()
 
-  // Full upfront means fully paid — auto-set amount_paid to price
-  const amountPaid = input.paymentOption === 'full_upfront' && input.price != null
+  // Auto-set amount_paid based on payment option
+  const amountPaid = input.price != null && input.paymentOption === 'full_upfront'
     ? input.price
+    : input.price != null && input.paymentOption === 'half_upfront'
+    ? Math.round(input.price / 2 * 100) / 100
     : undefined
 
   const { error } = await supabase.from('skulls').update({
