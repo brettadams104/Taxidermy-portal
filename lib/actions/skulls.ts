@@ -32,6 +32,29 @@ export async function addSkull(input: AddSkullInput) {
   revalidatePath(`/admin/clients/${input.clientId}`)
 }
 
+export async function updateSkull(skullId: string, input: {
+  points: number | null
+  dnrTagNumber: string | null
+  dateReceived: string
+  price: number | null
+  paymentOption: PaymentOption | null
+  notes: string | null
+}) {
+  const supabase = await createClient()
+  const { data: skull } = await supabase.from('skulls').select('client_id').eq('id', skullId).single()
+  const { error } = await supabase.from('skulls').update({
+    points: input.points,
+    dnr_tag_number: input.dnrTagNumber,
+    date_received: input.dateReceived,
+    price: input.price,
+    payment_option: input.paymentOption,
+    notes: input.notes,
+  }).eq('id', skullId)
+  if (error) throw new Error(error.message)
+  revalidatePath(`/admin/skulls/${skullId}`)
+  if (skull?.client_id) revalidatePath(`/admin/clients/${skull.client_id}`)
+}
+
 export async function advanceSkullStatus(skullId: string) {
   const supabase = await createClient()
   const adminClient = createAdminClient()
