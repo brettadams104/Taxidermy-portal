@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { SKULL_STATUSES } from '@/lib/constants'
 import { SkullCard } from '@/components/skull-card'
 import { AdvanceStatusButton } from '@/app/admin/clients/[id]/advance-status-button'
+import { StagesDropdown } from './stages-dropdown'
 import type { Skull, SkullStatus } from '@/lib/types'
 
 export default async function AdminDashboardPage() {
@@ -66,19 +67,7 @@ export default async function AdminDashboardPage() {
         <span className="text-blue-600">View →</span>
       </Link>
 
-      <div className="border rounded-xl bg-white shadow-sm overflow-hidden">
-        <div className="px-4 py-3 border-b">
-          <h2 className="font-semibold">Projects by Stage</h2>
-        </div>
-        <ul>
-          {SKULL_STATUSES.map(status => (
-            <li key={status} className="flex items-center justify-between px-4 py-3 border-b last:border-0">
-              <span className="text-sm">{status}</span>
-              <span className="font-semibold">{statusCounts[status]}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <StagesDropdown statuses={SKULL_STATUSES} counts={statusCounts} />
 
       <div className="space-y-3">
         <h2 className="font-semibold text-lg">Current Projects</h2>
