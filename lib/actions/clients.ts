@@ -49,6 +49,19 @@ export async function createClientAccount(input: CreateClientInput) {
   return { userId: data.user.id }
 }
 
+export async function deleteClient(clientId: string) {
+  const adminClient = createAdminClient()
+  const supabase = await createClient()
+
+  // Delete profile (cascades to skulls)
+  await supabase.from('profiles').delete().eq('id', clientId)
+
+  // Also delete the auth user if one exists (ignore error if no auth user)
+  await adminClient.auth.admin.deleteUser(clientId).catch(() => {})
+
+  revalidatePath('/admin/clients')
+}
+
 export async function updateClientProfile(
   clientId: string,
   updates: { name?: string; phone?: string; address?: string }

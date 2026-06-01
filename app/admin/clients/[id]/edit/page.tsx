@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { updateClientProfile } from '@/lib/actions/clients'
+import { updateClientProfile, deleteClient } from '@/lib/actions/clients'
 
 interface Props {
   searchParams: Promise<{ name?: string; phone?: string; address?: string }>
@@ -12,6 +12,8 @@ export default function EditClientPage({ searchParams: _ }: Props) {
   const router = useRouter()
   const params = useParams<{ id: string }>()
   const [loading, setLoading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [confirming, setConfirming] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -29,6 +31,16 @@ export default function EditClientPage({ searchParams: _ }: Props) {
     } catch (err) {
       setError((err as Error).message)
       setLoading(false)
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true)
+    try {
+      await deleteClient(params.id)
+      router.push('/admin/clients')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -66,6 +78,36 @@ export default function EditClientPage({ searchParams: _ }: Props) {
           Cancel
         </button>
       </form>
+
+      {/* Delete section */}
+      <div className="bg-white border border-red-200 rounded-xl p-4 shadow-sm space-y-3">
+        <p className="text-sm font-medium text-red-600">Delete Client</p>
+        <p className="text-xs text-gray-500">This will permanently delete the client and all their skulls. This cannot be undone.</p>
+        {confirming ? (
+          <div className="flex gap-2">
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="flex-1 bg-red-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-red-700 disabled:opacity-50"
+            >
+              {deleting ? 'Deleting...' : 'Yes, Delete'}
+            </button>
+            <button
+              onClick={() => setConfirming(false)}
+              className="flex-1 border rounded-lg py-2 text-sm font-medium hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirming(true)}
+            className="w-full border border-red-300 text-red-600 rounded-lg py-2 text-sm font-medium hover:bg-red-50"
+          >
+            Delete Client
+          </button>
+        )}
+      </div>
     </div>
   )
 }
