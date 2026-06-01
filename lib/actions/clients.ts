@@ -51,10 +51,10 @@ export async function createClientAccount(input: CreateClientInput) {
 
 export async function deleteClient(clientId: string) {
   const adminClient = createAdminClient()
-  const supabase = await createClient()
 
-  // Delete profile (cascades to skulls)
-  await supabase.from('profiles').delete().eq('id', clientId)
+  // Use service role to bypass RLS — delete profile (cascades to skulls)
+  const { error } = await adminClient.from('profiles').delete().eq('id', clientId)
+  if (error) throw new Error(error.message)
 
   // Also delete the auth user if one exists (ignore error if no auth user)
   await adminClient.auth.admin.deleteUser(clientId).catch(() => {})
