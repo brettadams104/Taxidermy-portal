@@ -86,6 +86,12 @@ export default async function AdminDashboardPage() {
               <div className="flex gap-2">
                 <AdvanceStatusButton skullId={project.id} currentStatus={project.status as SkullStatus} />
                 <Link
+                  href={`/admin/skulls/${project.id}/edit`}
+                  className="shrink-0 text-sm border rounded-lg px-4 py-2 bg-white hover:bg-gray-50"
+                >
+                  Edit
+                </Link>
+                <Link
                   href={`/admin/skulls/${project.id}`}
                   className="shrink-0 text-sm border rounded-lg px-4 py-2 bg-white hover:bg-gray-50"
                 >

@@ -59,6 +59,12 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             <div className="flex gap-2">
               <AdvanceStatusButton skullId={skull.id} currentStatus={skull.status as SkullStatus} />
               <Link
+                href={`/admin/skulls/${skull.id}/edit`}
+                className="shrink-0 text-sm border rounded-lg px-4 py-2 hover:bg-gray-50"
+              >
+                Edit
+              </Link>
+              <Link
                 href={`/admin/skulls/${skull.id}`}
                 className="shrink-0 text-sm border rounded-lg px-4 py-2 hover:bg-gray-50"
               >
