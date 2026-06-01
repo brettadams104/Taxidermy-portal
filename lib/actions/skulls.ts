@@ -19,6 +19,9 @@ export interface AddSkullInput {
 
 export async function addSkull(input: AddSkullInput) {
   const supabase = await createClient()
+  const amountPaid = input.paymentOption === 'full_upfront' && input.price != null
+    ? input.price
+    : 0
   const { error } = await supabase.from('skulls').insert({
     client_id: input.clientId,
     points: input.points,
@@ -27,6 +30,7 @@ export async function addSkull(input: AddSkullInput) {
     price: input.price,
     payment_option: input.paymentOption,
     notes: input.notes,
+    amount_paid: amountPaid,
   })
   if (error) throw new Error(error.message)
   revalidatePath(`/admin/clients/${input.clientId}`)
@@ -42,6 +46,12 @@ export async function updateSkull(skullId: string, input: {
 }) {
   const supabase = await createClient()
   const { data: skull } = await supabase.from('skulls').select('client_id').eq('id', skullId).single()
+
+  // Full upfront means fully paid — auto-set amount_paid to price
+  const amountPaid = input.paymentOption === 'full_upfront' && input.price != null
+    ? input.price
+    : undefined
+
   const { error } = await supabase.from('skulls').update({
     points: input.points,
     dnr_tag_number: input.dnrTagNumber,
@@ -49,6 +59,7 @@ export async function updateSkull(skullId: string, input: {
     price: input.price,
     payment_option: input.paymentOption,
     notes: input.notes,
+    ...(amountPaid !== undefined ? { amount_paid: amountPaid } : {}),
   }).eq('id', skullId)
   if (error) throw new Error(error.message)
   revalidatePath(`/admin/skulls/${skullId}`)
