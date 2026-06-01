@@ -3,25 +3,41 @@
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { randomUUID } from 'crypto'
 
 export interface CreateClientInput {
-  email: string
+  email: string | null
   name: string | null
   phone: string | null
   address: string | null
 }
 
 export async function createClientAccount(input: CreateClientInput) {
-  const adminClient = createAdminClient()
+  const supabase = await createClient()
 
-  // inviteUserByEmail creates the user AND sends a "Set up your account" email automatically
+  // No email — create a profile-only client (no portal access)
+  if (!input.email) {
+    const id = randomUUID()
+    const { error } = await supabase.from('profiles').insert({
+      id,
+      name: input.name,
+      phone: input.phone,
+      address: input.address,
+      role: 'client',
+    })
+    if (error) throw new Error(error.message)
+    revalidatePath('/admin/clients')
+    return { userId: id }
+  }
+
+  // Email provided — invite via Supabase (gives portal access)
+  const adminClient = createAdminClient()
   const { data, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
     input.email,
     { data: { role: 'client' } }
   )
   if (inviteError) throw new Error(inviteError.message)
 
-  // Update profile with optional contact info (profile row auto-created by DB trigger)
   if (input.name || input.phone || input.address) {
     await adminClient
       .from('profiles')
