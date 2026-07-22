@@ -22,8 +22,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--background)' }}>
       <header className="sticky top-0 z-10 border-b" style={{ backgroundColor: 'var(--primary)', borderColor: 'var(--border)' }}>
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/admin/dashboard" className="font-bold text-xl text-white flex items-center gap-2">
-            🦌 Taxidermy Studio
+          <Link href="/admin/dashboard" className="font-bold text-xl text-white">
+            Skull Studio
           </Link>
           <AdminNav signOut={signOut} />
         </div>

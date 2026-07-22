@@ -131,7 +131,6 @@ export default async function AdminDashboardPage() {
                     </p>
                     <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Mount preparation in progress</p>
                   </div>
-                  <span className="text-2xl">🦌</span>
                 </div>
                 <SkullCard skull={skull} />
                 <div className="flex gap-2 mt-4">
