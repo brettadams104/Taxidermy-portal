@@ -1,19 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  /* Outdoorsy color palette */
-  --primary: #1a472a;
-  --primary-light: #2d6a3d;
-  --primary-dark: #0f2917;
-  --accent: #5d4037;
-  --accent-light: #795548;
-  --gold: #b8860b;
-  --gold-light: #daa520;
-  --background: #f5f1e8;
+  /* Sophisticated black and tan palette */
+  --primary: #1a1a1a;
+  --primary-light: #2d2d2d;
+  --primary-dark: #0f0f0f;
+  --accent: #c9a876;
+  --accent-light: #daa520;
+  --accent-dark: #a68860;
+  --background: #f8f8f8;
   --surface: #ffffff;
-  --text: #2c3e50;
+  --text: #1a1a1a;
   --text-muted: #6b7280;
-  --border: #e5ddd0;
+  --border: #e5e5e5;
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
@@ -24,7 +23,6 @@
   --color-foreground: var(--text);
   --color-primary: var(--primary);
   --color-accent: var(--accent);
-  --color-gold: var(--gold);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
@@ -57,10 +55,10 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--primary-light);
+  background: var(--accent);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--primary);
+  background: var(--accent-dark);
 }
