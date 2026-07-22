@@ -5,14 +5,14 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Skull Studio Portal',
-  description: 'Track your European skull mount progress',
+  title: 'Taxidermy Studio Portal',
+  description: 'Professional European mount project management',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-gray-50 text-gray-900`}>
+      <body className={inter.className}>
         {children}
       </body>
     </html>

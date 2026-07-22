@@ -30,77 +30,131 @@ export default async function AdminDashboardPage() {
   }, 0) ?? 0
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <Link href="/admin/clients/new" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
+        <div>
+          <h1 className="text-4xl font-black" style={{ color: 'var(--primary)' }}>Dashboard</h1>
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Manage your European mount projects</p>
+        </div>
+        <Link href="/admin/clients/new" className="text-white font-semibold px-6 py-3 rounded-lg transition-all hover:shadow-lg" style={{ backgroundColor: 'var(--primary)' }}>
           + New Client
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Link href="/admin/clients" className="border rounded-xl p-4 bg-white shadow-sm hover:border-blue-400 transition-colors">
-          <p className="text-gray-700 text-sm">Total Clients</p>
-          <p className="text-3xl font-bold">{totalClients}</p>
-          <p className="text-xs text-blue-600 mt-1">View all →</p>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Total Clients */}
+        <Link href="/admin/clients" className="group">
+          <div className="rounded-xl p-6 h-full border-2 hover:shadow-xl transition-all" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>TOTAL CLIENTS</p>
+              <span className="text-2xl">👥</span>
+            </div>
+            <p className="text-4xl font-black" style={{ color: 'var(--primary)' }}>{totalClients}</p>
+            <p className="text-xs font-semibold mt-3" style={{ color: 'var(--gold)' }}>View all →</p>
+          </div>
         </Link>
-        <div className="border rounded-xl p-4 bg-white shadow-sm">
-          <p className="text-gray-700 text-sm">Outstanding Balance</p>
-          <p className="text-3xl font-bold">${totalOutstanding.toFixed(2)}</p>
+
+        {/* In Progress */}
+        <div className="rounded-xl p-6 border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>IN PROGRESS</p>
+            <span className="text-2xl">⚙️</span>
+          </div>
+          <p className="text-4xl font-black" style={{ color: 'var(--accent)' }}>{inProgressCount}</p>
+          <div className="mt-3 h-1 rounded-full" style={{ backgroundColor: 'var(--accent)' }}></div>
         </div>
-        <div className="border rounded-xl p-4 bg-white shadow-sm">
-          <p className="text-gray-700 text-sm">In Progress</p>
-          <p className="text-3xl font-bold">{inProgressCount}</p>
-        </div>
-        <Link href="/admin/skulls/finished" className="border rounded-xl p-4 bg-white shadow-sm hover:border-blue-400 transition-colors">
-          <p className="text-gray-700 text-sm">Finished Skulls</p>
-          <p className="text-3xl font-bold">{finishedCount}</p>
-          <p className="text-xs text-blue-600 mt-1">View all →</p>
+
+        {/* Finished Skulls */}
+        <Link href="/admin/skulls/finished" className="group">
+          <div className="rounded-xl p-6 h-full border-2 hover:shadow-xl transition-all" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>FINISHED</p>
+              <span className="text-2xl">✓</span>
+            </div>
+            <p className="text-4xl font-black" style={{ color: 'var(--gold)' }}>{finishedCount}</p>
+            <p className="text-xs font-semibold mt-3" style={{ color: 'var(--gold)' }}>View all →</p>
+          </div>
         </Link>
+
+        {/* Outstanding Balance */}
+        <div className="rounded-xl p-6 border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>OUTSTANDING</p>
+            <span className="text-2xl">💰</span>
+          </div>
+          <p className="text-3xl font-black" style={{ color: totalOutstanding > 0 ? 'var(--danger)' : 'var(--success)' }}>${totalOutstanding.toFixed(0)}</p>
+        </div>
       </div>
 
-      <Link
-        href="/admin/stats"
-        className="flex items-center justify-between border rounded-xl px-4 py-3 bg-white shadow-sm hover:border-blue-400 transition-colors text-sm"
-      >
-        <span className="font-medium">Business Stats & Trends</span>
-        <span className="text-blue-600">View →</span>
-      </Link>
-
-      <StagesDropdown statuses={SKULL_STATUSES} counts={statusCounts} />
-
-      <div className="space-y-3">
-        <h2 className="font-semibold text-lg">Current Projects</h2>
-        {!activeProjects?.length && (
-          <p className="text-gray-700 text-center py-8">No active projects.</p>
-        )}
-        {activeProjects?.map(project => {
-          const profile = project.profiles as { name: string | null } | null
-          const skull = project as unknown as Skull
-          return (
-            <div key={project.id} className="space-y-2">
-              <p className="text-sm font-medium text-gray-700 px-1">
-                {profile?.name ?? 'Unnamed Client'}
-              </p>
-              <SkullCard skull={skull} />
-              <div className="flex gap-2">
-                <AdvanceStatusButton skullId={project.id} currentStatus={project.status as SkullStatus} />
-                <Link
-                  href={`/admin/skulls/${project.id}/edit`}
-                  className="shrink-0 text-sm border rounded-lg px-4 py-2 bg-white hover:bg-gray-50"
-                >
-                  Edit
-                </Link>
-                <Link
-                  href={`/admin/skulls/${project.id}`}
-                  className="shrink-0 text-sm border rounded-lg px-4 py-2 bg-white hover:bg-gray-50"
-                >
-                  Manage
-                </Link>
+      {/* Analytics Section */}
+      <Link href="/admin/stats" className="group">
+        <div className="rounded-xl p-6 border-2 hover:shadow-xl transition-all" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">📊</span>
+              <div>
+                <p className="font-semibold" style={{ color: 'var(--text)' }}>Business Stats & Trends</p>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Revenue, completion rates, and more</p>
               </div>
             </div>
-          )
-        })}
+            <span style={{ color: 'var(--gold)' }}>→</span>
+          </div>
+        </div>
+      </Link>
+
+      {/* Project Stages */}
+      <div>
+        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--primary)' }}>Project Stages</h2>
+        <StagesDropdown statuses={SKULL_STATUSES} counts={statusCounts} />
+      </div>
+
+      {/* Active Projects */}
+      <div>
+        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--primary)' }}>Active Projects</h2>
+        {!activeProjects?.length && (
+          <div className="rounded-xl p-12 text-center border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+            <p style={{ color: 'var(--text-muted)' }}>No active projects</p>
+          </div>
+        )}
+        <div className="space-y-4">
+          {activeProjects?.map(project => {
+            const profile = project.profiles as { name: string | null } | null
+            const skull = project as unknown as Skull
+            return (
+              <div key={project.id} className="rounded-xl p-6 border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <p className="font-semibold text-lg" style={{ color: 'var(--text)' }}>
+                      {profile?.name ?? 'Unnamed Client'}
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Mount preparation in progress</p>
+                  </div>
+                  <span className="text-2xl">🦌</span>
+                </div>
+                <SkullCard skull={skull} />
+                <div className="flex gap-2 mt-4">
+                  <AdvanceStatusButton skullId={project.id} currentStatus={project.status as SkullStatus} />
+                  <Link
+                    href={`/admin/skulls/${project.id}/edit`}
+                    className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                    style={{ backgroundColor: 'var(--background)', color: 'var(--text)' }}
+                  >
+                    Edit
+                  </Link>
+                  <Link
+                    href={`/admin/skulls/${project.id}`}
+                    className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                    style={{ backgroundColor: 'var(--background)', color: 'var(--text)' }}
+                  >
+                    Manage
+                  </Link>
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )
