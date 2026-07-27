@@ -132,3 +132,27 @@ export async function advanceSkullStatus(skullId: string) {
   revalidatePath(`/admin/clients/${skull.client_id}`)
   revalidatePath(`/admin/skulls/${skullId}`)
 }
+
+export async function markSkullAsPickedUp(skullId: string) {
+  const supabase = await createClient()
+
+  const { data: skull, error: fetchError } = await supabase
+    .from('skulls')
+    .select('client_id, status')
+    .eq('id', skullId)
+    .single()
+
+  if (fetchError || !skull) throw new Error('Skull not found')
+  if (skull.status !== 'Pending Pickup') throw new Error('Skull is not in Pending Pickup status')
+
+  const { error: updateError } = await supabase
+    .from('skulls')
+    .update({ status: 'Completed' })
+    .eq('id', skullId)
+
+  if (updateError) throw new Error(updateError.message)
+
+  revalidatePath(`/admin/clients/${skull.client_id}`)
+  revalidatePath(`/admin/skulls/${skullId}`)
+  revalidatePath(`/admin/skulls/pending-pickup`)
+}
