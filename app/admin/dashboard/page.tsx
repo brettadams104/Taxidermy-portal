@@ -15,11 +15,19 @@ export default async function AdminDashboardPage() {
     .from('skulls')
     .select('*, profiles(name)')
     .neq('status', 'Finished')
+    .neq('status', 'Pending Pickup')
+    .order('created_at', { ascending: false })
+
+  const { data: pendingPickupSkulls } = await supabase
+    .from('skulls')
+    .select('*, profiles(name)')
+    .eq('status', 'Pending Pickup')
     .order('created_at', { ascending: false })
 
   const totalClients = profiles?.length ?? 0
   const finishedCount = skulls?.filter(sk => sk.status === 'Finished').length ?? 0
-  const inProgressCount = skulls?.filter(sk => sk.status !== 'Finished').length ?? 0
+  const pendingPickupCount = skulls?.filter(sk => sk.status === 'Pending Pickup').length ?? 0
+  const inProgressCount = skulls?.filter(sk => sk.status !== 'Finished' && sk.status !== 'Pending Pickup').length ?? 0
   const statusCounts = SKULL_STATUSES.reduce<Record<string, number>>((acc, s) => {
     acc[s] = skulls?.filter(sk => sk.status === s).length ?? 0
     return acc
@@ -65,6 +73,15 @@ export default async function AdminDashboardPage() {
           <div className="rounded-xl p-6 h-full border-2 hover:shadow-xl transition-all" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
             <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>Finished</p>
             <p className="text-4xl font-black mb-2" style={{ color: 'var(--accent)' }}>{finishedCount}</p>
+            <p className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>View all</p>
+          </div>
+        </Link>
+
+        {/* Pending Pickup */}
+        <Link href="/admin/skulls/pending-pickup" className="group">
+          <div className="rounded-xl p-6 h-full border-2 hover:shadow-xl transition-all" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+            <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>Pending Pickup</p>
+            <p className="text-4xl font-black mb-2" style={{ color: 'var(--accent)' }}>{pendingPickupCount}</p>
             <p className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>View all</p>
           </div>
         </Link>
@@ -133,6 +150,37 @@ export default async function AdminDashboardPage() {
                     Manage
                   </Link>
                 </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Pending Pickup Projects */}
+      <div>
+        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--primary)' }}>Ready for Pickup</h2>
+        {!pendingPickupSkulls?.length && (
+          <div className="rounded-xl p-12 text-center border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+            <p style={{ color: 'var(--text-muted)' }}>No skulls pending pickup</p>
+          </div>
+        )}
+        <div className="space-y-4">
+          {pendingPickupSkulls?.map(skull => {
+            const profile = skull.profiles as { name: string | null } | null
+            return (
+              <div key={skull.id} className="rounded-xl p-6 border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+                <div className="mb-4">
+                  <p className="font-bold text-lg" style={{ color: 'var(--text)' }}>
+                    {profile?.name ?? 'Unnamed Client'} - Ready for Pickup
+                  </p>
+                </div>
+                <Link
+                  href={`/admin/skulls/${skull.id}`}
+                  className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors inline-block"
+                  style={{ backgroundColor: 'var(--background)', color: 'var(--text)' }}
+                >
+                  View Details
+                </Link>
               </div>
             )
           })}
