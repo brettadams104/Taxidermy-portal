@@ -8,6 +8,7 @@ export type SkullStatus =
   | 'Degreasing'
   | 'Whitening'
   | 'Finished'
+  | 'Pending Pickup'
 
 export type PaymentOption = 'full_upfront' | 'half_upfront' | 'pay_at_completion'
 
