@@ -60,20 +60,12 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <StatusDropdown skullId={skull.id} currentStatus={skull.status as SkullStatus} />
               <AdvanceStatusButton skullId={skull.id} currentStatus={skull.status as SkullStatus} />
-              <div className="flex gap-2">
-                <Link
-                  href={`/admin/skulls/${skull.id}/edit`}
-                  className="flex-1 text-sm border rounded-lg px-4 py-2 hover:bg-gray-50 text-center"
-                >
-                  Edit
-                </Link>
-                <Link
-                  href={`/admin/skulls/${skull.id}`}
-                  className="flex-1 text-sm border rounded-lg px-4 py-2 hover:bg-gray-50 text-center"
-                >
-                  Manage
-                </Link>
-              </div>
+              <Link
+                href={`/admin/skulls/${skull.id}/edit`}
+                className="text-sm border rounded-lg px-4 py-2 hover:bg-gray-50 text-center"
+              >
+                Edit
+              </Link>
             </div>
           </div>
         ))}
