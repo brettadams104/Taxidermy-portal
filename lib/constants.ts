@@ -9,6 +9,7 @@ export const SKULL_STATUSES: SkullStatus[] = [
   'Whitening',
   'Finished',
   'Pending Pickup',
+  'Picked Up',
 ]
 
 export const PAYMENT_OPTIONS = [

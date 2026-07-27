@@ -154,9 +154,12 @@ export async function markSkullAsPickedUp(skullId: string) {
   if (fetchError || !skull) throw new Error('Skull not found')
   if (skull.status !== 'Pending Pickup') throw new Error('Skull is not in Pending Pickup status')
 
+  // Set to Pending Pickup but flag it as picked up via a separate column if needed,
+  // or just remove from active queries. For now, we'll mark as completed conceptually
+  // by not including it in any active workflows
   const { error: updateError } = await supabase
     .from('skulls')
-    .update({ status: 'Completed' })
+    .update({ status: 'Picked Up' })
     .eq('id', skullId)
 
   if (updateError) throw new Error(updateError.message)

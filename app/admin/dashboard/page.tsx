@@ -27,7 +27,7 @@ export default async function AdminDashboardPage() {
   const totalClients = profiles?.length ?? 0
   const finishedCount = skulls?.filter(sk => sk.status === 'Finished').length ?? 0
   const pendingPickupCount = skulls?.filter(sk => sk.status === 'Pending Pickup').length ?? 0
-  const inProgressCount = skulls?.filter(sk => sk.status !== 'Finished' && sk.status !== 'Pending Pickup').length ?? 0
+  const inProgressCount = skulls?.filter(sk => sk.status !== 'Finished' && sk.status !== 'Pending Pickup' && sk.status !== 'Picked Up').length ?? 0
   const statusCounts = SKULL_STATUSES.reduce<Record<string, number>>((acc, s) => {
     acc[s] = skulls?.filter(sk => sk.status === s).length ?? 0
     return acc
