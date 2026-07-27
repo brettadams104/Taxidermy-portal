@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { SkullCard } from '@/components/skull-card'
 import { AdvanceStatusButton } from './advance-status-button'
+import { StatusDropdown } from './status-dropdown'
 import type { SkullStatus } from '@/lib/types'
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -56,20 +57,23 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         {skulls?.map(skull => (
           <div key={skull.id} className="space-y-2">
             <SkullCard skull={skull} />
-            <div className="flex gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <StatusDropdown skullId={skull.id} currentStatus={skull.status as SkullStatus} />
               <AdvanceStatusButton skullId={skull.id} currentStatus={skull.status as SkullStatus} />
-              <Link
-                href={`/admin/skulls/${skull.id}/edit`}
-                className="shrink-0 text-sm border rounded-lg px-4 py-2 hover:bg-gray-50"
-              >
-                Edit
-              </Link>
-              <Link
-                href={`/admin/skulls/${skull.id}`}
-                className="shrink-0 text-sm border rounded-lg px-4 py-2 hover:bg-gray-50"
-              >
-                Manage
-              </Link>
+              <div className="flex gap-2">
+                <Link
+                  href={`/admin/skulls/${skull.id}/edit`}
+                  className="flex-1 text-sm border rounded-lg px-4 py-2 hover:bg-gray-50 text-center"
+                >
+                  Edit
+                </Link>
+                <Link
+                  href={`/admin/skulls/${skull.id}`}
+                  className="flex-1 text-sm border rounded-lg px-4 py-2 hover:bg-gray-50 text-center"
+                >
+                  Manage
+                </Link>
+              </div>
             </div>
           </div>
         ))}
