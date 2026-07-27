@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getNextStatus, isFinished } from '@/lib/actions/skull-helpers'
+import { getNextStatus, isFinished, isPendingPickup } from '@/lib/actions/skull-helpers'
 import type { SkullStatus } from '@/lib/types'
 
 describe('getNextStatus', () => {
@@ -7,10 +7,11 @@ describe('getNextStatus', () => {
     expect(getNextStatus('Deer Head Received')).toBe('Skull Skinned')
     expect(getNextStatus('Skull Skinned')).toBe('Maceration Period')
     expect(getNextStatus('Whitening')).toBe('Finished')
+    expect(getNextStatus('Finished')).toBe('Pending Pickup')
   })
 
-  it('returns null when already at Finished', () => {
-    expect(getNextStatus('Finished')).toBeNull()
+  it('returns null when already at Pending Pickup', () => {
+    expect(getNextStatus('Pending Pickup')).toBeNull()
   })
 })
 
@@ -25,5 +26,23 @@ describe('isFinished', () => {
       'Skull Cleaning', 'Degreasing', 'Whitening',
     ]
     others.forEach(s => expect(isFinished(s)).toBe(false))
+  })
+})
+
+describe('Pending Pickup Status', () => {
+  it('should transition from Finished to Pending Pickup', () => {
+    const nextStatus = getNextStatus('Finished')
+    expect(nextStatus).toBe('Pending Pickup')
+  })
+
+  it('should return null for Pending Pickup (no further status)', () => {
+    const nextStatus = getNextStatus('Pending Pickup')
+    expect(nextStatus).toBeNull()
+  })
+
+  it('isPendingPickup should correctly identify Pending Pickup status', () => {
+    expect(isPendingPickup('Pending Pickup')).toBe(true)
+    expect(isPendingPickup('Finished')).toBe(false)
+    expect(isPendingPickup('Whitening')).toBe(false)
   })
 })
