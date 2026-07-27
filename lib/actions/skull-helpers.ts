@@ -9,3 +9,7 @@ export function getNextStatus(current: SkullStatus): SkullStatus | null {
 export function isFinished(status: SkullStatus): boolean {
   return status === 'Finished'
 }
+
+export function isPendingPickup(status: SkullStatus): boolean {
+  return status === 'Pending Pickup'
+}
