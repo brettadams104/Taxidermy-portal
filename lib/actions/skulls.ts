@@ -85,9 +85,16 @@ export async function advanceSkullStatus(skullId: string) {
   const nextStatus = getNextStatus(skull.status)
   if (!nextStatus) throw new Error('Already at final status')
 
+  let finalStatus = nextStatus
+
+  // If advancing to Finished, auto-transition to Pending Pickup after sending notification
+  if (isFinished(nextStatus)) {
+    finalStatus = 'Pending Pickup'
+  }
+
   const { error: updateError } = await supabase
     .from('skulls')
-    .update({ status: nextStatus })
+    .update({ status: finalStatus })
     .eq('id', skullId)
 
   if (updateError) throw new Error(updateError.message)
@@ -131,6 +138,8 @@ export async function advanceSkullStatus(skullId: string) {
 
   revalidatePath(`/admin/clients/${skull.client_id}`)
   revalidatePath(`/admin/skulls/${skullId}`)
+  revalidatePath(`/admin/dashboard`)
+  revalidatePath(`/admin/skulls/pending-pickup`)
 }
 
 export async function markSkullAsPickedUp(skullId: string) {
