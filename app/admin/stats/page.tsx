@@ -51,7 +51,7 @@ export default async function StatsPage({ searchParams }: Props) {
   const totalCollected = yearSkulls.reduce((sum, s) => sum + s.amount_paid, 0)
   const totalOutstanding = Math.max(0, totalBilled - totalCollected)
   const totalDropOffs = yearSkulls.length
-  const finished = yearSkulls.filter(s => s.status === 'Finished').length
+  const finished = yearSkulls.filter(s => s.status === 'Picked Up').length
 
   return (
     <div className="space-y-6">
