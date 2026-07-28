@@ -71,75 +71,86 @@ export async function updateSkull(skullId: string, input: {
 }
 
 export async function advanceSkullStatus(skullId: string) {
-  const supabase = await createClient()
-  const adminClient = createAdminClient()
+  try {
+    const supabase = await createClient()
+    const adminClient = createAdminClient()
 
-  const { data: skull, error: fetchError } = await supabase
-    .from('skulls')
-    .select('*, client:profiles(id, name, phone)')
-    .eq('id', skullId)
-    .single()
-
-  if (fetchError || !skull) throw new Error('Skull not found')
-
-  const nextStatus = getNextStatus(skull.status)
-  if (!nextStatus) throw new Error('Already at final status')
-
-  let finalStatus = nextStatus
-
-  // If advancing to Finished, auto-transition to Pending Pickup after sending notification
-  if (isFinished(nextStatus)) {
-    finalStatus = 'Pending Pickup'
-  }
-
-  const { error: updateError } = await supabase
-    .from('skulls')
-    .update({ status: finalStatus })
-    .eq('id', skullId)
-
-  if (updateError) throw new Error(updateError.message)
-
-  if (isFinished(nextStatus)) {
-    // Atomically flip finished_notified from false→true.
-    // If another concurrent call already flipped it, this returns no rows and we skip.
-    const { data: claimed } = await supabase
+    const { data: skull, error: fetchError } = await supabase
       .from('skulls')
-      .update({ finished_notified: true })
+      .select('*, client:profiles(id, name, phone)')
       .eq('id', skullId)
-      .eq('finished_notified', false)
-      .select('id')
+      .single()
 
-    if (claimed && claimed.length > 0) {
-      const { data: { user } } = await adminClient.auth.admin.getUserById(skull.client_id)
-      const email = user?.email
+    if (fetchError || !skull) throw new Error('Skull not found')
 
-      const { data: templates } = await supabase
-        .from('notification_templates')
-        .select('*')
-        .in('type', ['email', 'sms'])
-      const emailTemplate = templates?.find(t => t.type === 'email')
-      const smsTemplate = templates?.find(t => t.type === 'sms')
+    const nextStatus = getNextStatus(skull.status)
+    if (!nextStatus) throw new Error('Already at final status')
 
-      if (email && emailTemplate && smsTemplate) {
-        await sendFinishedNotification({
-          clientEmail: email,
-          clientPhone: skull.client?.phone ?? null,
-          clientName: skull.client?.name ?? null,
-          points: skull.points,
-          dnrTag: skull.dnr_tag_number,
-          emailTemplate: { subject: emailTemplate.subject ?? 'Your skull is ready!', body: emailTemplate.body },
-          smsTemplate: { body: smsTemplate.body },
-        })
-      } else {
-        console.warn('[advanceSkullStatus] finished notification skipped: missing email or templates for skull', skullId)
+    let finalStatus = nextStatus
+
+    // If advancing to Finished, auto-transition to Pending Pickup after sending notification
+    if (isFinished(nextStatus)) {
+      finalStatus = 'Pending Pickup'
+    }
+
+    const { error: updateError } = await supabase
+      .from('skulls')
+      .update({ status: finalStatus })
+      .eq('id', skullId)
+
+    if (updateError) throw new Error(`Update failed: ${updateError.message}`)
+
+    if (isFinished(nextStatus)) {
+      // Atomically flip finished_notified from false→true.
+      // If another concurrent call already flipped it, this returns no rows and we skip.
+      const { data: claimed } = await supabase
+        .from('skulls')
+        .update({ finished_notified: true })
+        .eq('id', skullId)
+        .eq('finished_notified', false)
+        .select('id')
+
+      if (claimed && claimed.length > 0) {
+        try {
+          const { data: { user } } = await adminClient.auth.admin.getUserById(skull.client_id)
+          const email = user?.email
+
+          const { data: templates } = await supabase
+            .from('notification_templates')
+            .select('*')
+            .in('type', ['email', 'sms'])
+          const emailTemplate = templates?.find(t => t.type === 'email')
+          const smsTemplate = templates?.find(t => t.type === 'sms')
+
+          if (email && emailTemplate && smsTemplate) {
+            await sendFinishedNotification({
+              clientEmail: email,
+              clientPhone: skull.client?.phone ?? null,
+              clientName: skull.client?.name ?? null,
+              points: skull.points,
+              dnrTag: skull.dnr_tag_number,
+              emailTemplate: { subject: emailTemplate.subject ?? 'Your skull is ready!', body: emailTemplate.body },
+              smsTemplate: { body: smsTemplate.body },
+            })
+          } else {
+            console.warn('[advanceSkullStatus] finished notification skipped: missing email or templates for skull', skullId)
+          }
+        } catch (notifError) {
+          console.error('[advanceSkullStatus] notification error:', notifError)
+          // Don't throw - notification failure shouldn't block the status update
+        }
       }
     }
-  }
 
-  revalidatePath(`/admin/clients/${skull.client_id}`)
-  revalidatePath(`/admin/skulls/${skullId}`)
-  revalidatePath(`/admin/dashboard`)
-  revalidatePath(`/admin/skulls/pending-pickup`)
+    revalidatePath(`/admin/clients/${skull.client_id}`)
+    revalidatePath(`/admin/skulls/${skullId}`)
+    revalidatePath(`/admin/dashboard`)
+    revalidatePath(`/admin/skulls/pending-pickup`)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error occurred'
+    console.error('[advanceSkullStatus] Error:', message, error)
+    throw new Error(message)
+  }
 }
 
 export async function markSkullAsPickedUp(skullId: string) {
