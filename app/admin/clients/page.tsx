@@ -31,7 +31,7 @@ export default async function ClientsPage() {
       <ul className="space-y-3">
         {profiles?.map(profile => {
           const activeCount = (profile.skulls as { status: string }[])
-            ?.filter(s => s.status !== 'Finished').length ?? 0
+            ?.filter(s => s.status !== 'Finished' && s.status !== 'Pending Pickup' && s.status !== 'Picked Up').length ?? 0
           return (
             <li key={profile.id}>
               <Link
