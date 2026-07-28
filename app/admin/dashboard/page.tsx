@@ -17,6 +17,7 @@ export default async function AdminDashboardPage() {
     .select('*, profiles(name)')
     .neq('status', 'Finished')
     .neq('status', 'Pending Pickup')
+    .neq('status', 'Picked Up')
     .order('created_at', { ascending: false })
 
   const { data: pendingPickupSkulls } = await supabase
