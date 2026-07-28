@@ -13,6 +13,7 @@ interface Props {
 export function AdvanceStatusButton({ skullId, currentStatus }: Props) {
   const [loading, setLoading] = useState(false)
   const [confirming, setConfirming] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const nextStatus = getNextStatus(currentStatus)
 
   if (!nextStatus) return null
@@ -22,30 +23,37 @@ export function AdvanceStatusButton({ skullId, currentStatus }: Props) {
   async function handleClick() {
     if (isFinishing && !confirming) {
       setConfirming(true)
+      setError(null)
       return
     }
     setLoading(true)
+    setError(null)
     try {
       await advanceSkullStatus(skullId)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to advance status')
+      setConfirming(false)
     } finally {
       setLoading(false)
-      setConfirming(false)
     }
   }
 
   return (
-    <button
-      onClick={handleClick}
-      disabled={loading}
-      className={`w-full text-sm rounded-lg py-2 font-medium disabled:opacity-50 ${
-        confirming
-          ? 'bg-orange-500 text-white hover:bg-orange-600'
-          : 'bg-blue-600 text-white hover:bg-blue-700'
-      }`}
-    >
-      {loading ? 'Updating...' : confirming
-        ? `Confirm Mark as Finished (sends notification)`
-        : `Advance → ${nextStatus}`}
-    </button>
+    <>
+      <button
+        onClick={handleClick}
+        disabled={loading}
+        className={`w-full text-sm rounded-lg py-2 font-medium disabled:opacity-50 ${
+          confirming
+            ? 'bg-orange-500 text-white hover:bg-orange-600'
+            : 'bg-blue-600 text-white hover:bg-blue-700'
+        }`}
+      >
+        {loading ? 'Updating...' : confirming
+          ? `Confirm Mark as Finished (sends notification)`
+          : `Advance → ${nextStatus}`}
+      </button>
+      {error && <p className="text-red-600 text-xs mt-1">{error}</p>}
+    </>
   )
 }
