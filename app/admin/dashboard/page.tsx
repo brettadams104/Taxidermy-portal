@@ -4,6 +4,7 @@ import { SKULL_STATUSES } from '@/lib/constants'
 import { SkullCard } from '@/components/skull-card'
 import { AdvanceStatusButton } from '@/app/admin/clients/[id]/advance-status-button'
 import { StagesDropdown } from './stages-dropdown'
+import { MarkPickedUpButton } from './mark-picked-up-button'
 import type { Skull, SkullStatus } from '@/lib/types'
 
 export default async function AdminDashboardPage() {
@@ -174,13 +175,16 @@ export default async function AdminDashboardPage() {
                     {profile?.name ?? 'Unnamed Client'} - Ready for Pickup
                   </p>
                 </div>
-                <Link
-                  href={`/admin/skulls/${skull.id}`}
-                  className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors inline-block"
-                  style={{ backgroundColor: 'var(--background)', color: 'var(--text)' }}
-                >
-                  View Details
-                </Link>
+                <div className="flex gap-2">
+                  <Link
+                    href={`/admin/skulls/${skull.id}`}
+                    className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                    style={{ backgroundColor: 'var(--background)', color: 'var(--text)' }}
+                  >
+                    View Details
+                  </Link>
+                  <MarkPickedUpButton skullId={skull.id} />
+                </div>
               </div>
             )
           })}
