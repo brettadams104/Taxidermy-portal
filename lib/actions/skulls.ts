@@ -71,38 +71,31 @@ export async function updateSkull(skullId: string, input: {
 }
 
 export async function advanceSkullStatus(skullId: string) {
-  try {
-    const supabase = await createClient()
-    const adminClient = createAdminClient()
+  const supabase = await createClient()
+  const adminClient = createAdminClient()
 
-    const { data: skull, error: fetchError } = await supabase
-      .from('skulls')
-      .select('*, client:profiles(id, name, phone)')
-      .eq('id', skullId)
-      .single()
+  const { data: skull, error: fetchError } = await supabase
+    .from('skulls')
+    .select('*, client:profiles(id, name, phone)')
+    .eq('id', skullId)
+    .single()
 
-    if (fetchError || !skull) throw new Error('Skull not found')
+  if (fetchError || !skull) throw new Error('Skull not found')
 
-    const nextStatus = getNextStatus(skull.status)
-    if (!nextStatus) throw new Error('Already at final status')
+  const nextStatus = getNextStatus(skull.status)
+  if (!nextStatus) throw new Error('Already at final status')
 
-    let finalStatus = nextStatus
+  // Simply update to next status - no auto-transitions
+  const { error: updateError } = await supabase
+    .from('skulls')
+    .update({ status: nextStatus })
+    .eq('id', skullId)
 
-    // If advancing to Finished, auto-transition to Pending Pickup after sending notification
-    if (isFinished(nextStatus)) {
-      finalStatus = 'Pending Pickup'
-    }
+  if (updateError) throw new Error(`Update failed: ${updateError.message}`)
 
-    const { error: updateError } = await supabase
-      .from('skulls')
-      .update({ status: finalStatus })
-      .eq('id', skullId)
-
-    if (updateError) throw new Error(`Update failed: ${updateError.message}`)
-
-    if (isFinished(nextStatus)) {
-      // Atomically flip finished_notified from false→true.
-      // If another concurrent call already flipped it, this returns no rows and we skip.
+  // Send notification if advancing to Finished
+  if (isFinished(nextStatus)) {
+    try {
       const { data: claimed } = await supabase
         .from('skulls')
         .update({ finished_notified: true })
@@ -111,10 +104,10 @@ export async function advanceSkullStatus(skullId: string) {
         .select('id')
 
       if (claimed && claimed.length > 0) {
-        try {
-          const { data: { user } } = await adminClient.auth.admin.getUserById(skull.client_id)
-          const email = user?.email
+        const { data: { user } } = await adminClient.auth.admin.getUserById(skull.client_id)
+        const email = user?.email
 
+        if (email) {
           const { data: templates } = await supabase
             .from('notification_templates')
             .select('*')
@@ -122,7 +115,7 @@ export async function advanceSkullStatus(skullId: string) {
           const emailTemplate = templates?.find(t => t.type === 'email')
           const smsTemplate = templates?.find(t => t.type === 'sms')
 
-          if (email && emailTemplate && smsTemplate) {
+          if (emailTemplate && smsTemplate) {
             await sendFinishedNotification({
               clientEmail: email,
               clientPhone: skull.client?.phone ?? null,
@@ -132,25 +125,19 @@ export async function advanceSkullStatus(skullId: string) {
               emailTemplate: { subject: emailTemplate.subject ?? 'Your skull is ready!', body: emailTemplate.body },
               smsTemplate: { body: smsTemplate.body },
             })
-          } else {
-            console.warn('[advanceSkullStatus] finished notification skipped: missing email or templates for skull', skullId)
           }
-        } catch (notifError) {
-          console.error('[advanceSkullStatus] notification error:', notifError)
-          // Don't throw - notification failure shouldn't block the status update
         }
       }
+    } catch (err) {
+      console.error('Notification error:', err)
+      // Silently fail - notification error shouldn't block the workflow
     }
-
-    revalidatePath(`/admin/clients/${skull.client_id}`)
-    revalidatePath(`/admin/skulls/${skullId}`)
-    revalidatePath(`/admin/dashboard`)
-    revalidatePath(`/admin/skulls/pending-pickup`)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error occurred'
-    console.error('[advanceSkullStatus] Error:', message, error)
-    throw new Error(message)
   }
+
+  revalidatePath(`/admin/clients/${skull.client_id}`)
+  revalidatePath(`/admin/skulls/${skullId}`)
+  revalidatePath(`/admin/dashboard`)
+  revalidatePath(`/admin/skulls/pending-pickup`)
 }
 
 export async function markSkullAsPickedUp(skullId: string) {
