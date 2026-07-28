@@ -85,10 +85,16 @@ export async function advanceSkullStatus(skullId: string) {
   const nextStatus = getNextStatus(skull.status)
   if (!nextStatus) throw new Error('Already at final status')
 
-  // Simply update to next status - no auto-transitions
+  let statusToSet = nextStatus
+
+  // Auto-transition from Finished to Pending Pickup
+  if (isFinished(nextStatus)) {
+    statusToSet = 'Pending Pickup'
+  }
+
   const { error: updateError } = await supabase
     .from('skulls')
-    .update({ status: nextStatus })
+    .update({ status: statusToSet })
     .eq('id', skullId)
 
   if (updateError) throw new Error(`Update failed: ${updateError.message}`)
@@ -130,14 +136,11 @@ export async function advanceSkullStatus(skullId: string) {
       }
     } catch (err) {
       console.error('Notification error:', err)
-      // Silently fail - notification error shouldn't block the workflow
     }
   }
 
   revalidatePath(`/admin/clients/${skull.client_id}`)
-  revalidatePath(`/admin/skulls/${skullId}`)
   revalidatePath(`/admin/dashboard`)
-  revalidatePath(`/admin/skulls/pending-pickup`)
 }
 
 export async function markSkullAsPickedUp(skullId: string) {
