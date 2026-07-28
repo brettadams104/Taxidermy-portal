@@ -27,7 +27,7 @@ export default async function AdminDashboardPage() {
     .order('created_at', { ascending: false })
 
   const totalClients = profiles?.length ?? 0
-  const finishedCount = skulls?.filter(sk => sk.status === 'Finished').length ?? 0
+  const completedCount = skulls?.filter(sk => sk.status === 'Picked Up').length ?? 0
   const pendingPickupCount = skulls?.filter(sk => sk.status === 'Pending Pickup').length ?? 0
   const inProgressCount = skulls?.filter(sk => sk.status !== 'Finished' && sk.status !== 'Pending Pickup' && sk.status !== 'Picked Up').length ?? 0
   const statusCounts = SKULL_STATUSES.reduce<Record<string, number>>((acc, s) => {
@@ -70,11 +70,11 @@ export default async function AdminDashboardPage() {
           <div className="h-1 rounded-full" style={{ backgroundColor: 'var(--accent)' }}></div>
         </div>
 
-        {/* Finished Skulls */}
+        {/* Completed Skulls */}
         <Link href="/admin/skulls/finished" className="group">
           <div className="rounded-xl p-6 h-full border-2 hover:shadow-xl transition-all" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
-            <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>Finished</p>
-            <p className="text-4xl font-black mb-2" style={{ color: 'var(--accent)' }}>{finishedCount}</p>
+            <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>Completed</p>
+            <p className="text-4xl font-black mb-2" style={{ color: 'var(--accent)' }}>{completedCount}</p>
             <p className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>View all</p>
           </div>
         </Link>

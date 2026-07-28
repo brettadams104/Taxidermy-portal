@@ -9,7 +9,7 @@ export default async function FinishedSkullsPage() {
   const { data: skulls } = await supabase
     .from('skulls')
     .select('*, profiles(name)')
-    .eq('status', 'Finished')
+    .eq('status', 'Picked Up')
     .order('created_at', { ascending: false })
 
   const { data: { users } } = await adminClient.auth.admin.listUsers()
@@ -18,10 +18,10 @@ export default async function FinishedSkullsPage() {
   return (
     <div className="space-y-4">
       <Link href="/admin/dashboard" className="text-blue-600 hover:underline text-sm">← Dashboard</Link>
-      <h1 className="text-2xl font-bold">Finished Skulls</h1>
+      <h1 className="text-2xl font-bold">Completed Skulls</h1>
 
       {!skulls?.length && (
-        <p className="text-gray-700 text-center py-8">No finished skulls yet.</p>
+        <p className="text-gray-700 text-center py-8">No completed skulls yet.</p>
       )}
 
       <ul className="space-y-3">
