@@ -146,32 +146,6 @@ export async function advanceSkullStatus(skullId: string) {
   revalidatePath(`/admin/dashboard`)
 }
 
-export async function markSkullAsPickedUp(skullId: string) {
-  const supabase = await createClient()
-
-  const { data: skull, error: fetchError } = await supabase
-    .from('skulls')
-    .select('client_id, status')
-    .eq('id', skullId)
-    .single()
-
-  if (fetchError || !skull) throw new Error('Skull not found')
-  if (skull.status !== 'Pending Pickup') throw new Error('Skull is not in Pending Pickup status')
-
-  // Set to Pending Pickup but flag it as picked up via a separate column if needed,
-  // or just remove from active queries. For now, we'll mark as completed conceptually
-  // by not including it in any active workflows
-  const { error: updateError } = await supabase
-    .from('skulls')
-    .update({ status: 'Picked Up' })
-    .eq('id', skullId)
-
-  if (updateError) throw new Error(updateError.message)
-
-  revalidatePath(`/admin/clients/${skull.client_id}`)
-  revalidatePath(`/admin/skulls/${skullId}`)
-  revalidatePath(`/admin/skulls/pending-pickup`)
-}
 
 export async function updateSkullStatusDirect(skullId: string, newStatus: string) {
   const supabase = await createClient()

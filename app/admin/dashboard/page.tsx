@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { SkullCard } from '@/components/skull-card'
 import { AdvanceStatusButton } from '@/app/admin/clients/[id]/advance-status-button'
 import { StagesDropdown } from './stages-dropdown'
-import { MarkPickedUpButton } from './mark-picked-up-button'
 import { getAllSkullsByBusiness, getSkullsInProgressWithClients, getSkullsByStatus } from '@/lib/queries/skulls'
 import { getFinalStage } from '@/lib/queries/stages'
 import type { Skull, SkullStatus } from '@/lib/types'
@@ -88,14 +87,6 @@ export default async function AdminDashboardPage() {
           </div>
         </Link>
 
-        {/* Pending Pickup */}
-        <Link href="/admin/skulls/pending-pickup" className="group">
-          <div className="rounded-xl p-6 h-full border-2 hover:shadow-xl transition-all" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
-            <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>Pending Pickup</p>
-            <p className="text-4xl font-black mb-2" style={{ color: 'var(--accent)' }}>{pendingPickupCount}</p>
-            <p className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>View all</p>
-          </div>
-        </Link>
 
         {/* Outstanding Balance */}
         <div className="rounded-xl p-6 border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
