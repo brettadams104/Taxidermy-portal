@@ -1,5 +1,5 @@
 // lib/auth/business-setup.ts
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@/lib/supabase/server';
 import { DEFAULT_STAGES } from '@/lib/types/business';
 import type { Business } from '@/lib/types/business';
 
@@ -22,7 +22,7 @@ export async function createBusinessForUser(
     throw new Error('userId must be a non-empty string');
   }
 
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   const sanitizedName = businessName?.trim() || 'My Taxidermy Studio';
 
   // Create business record
@@ -68,7 +68,7 @@ export async function getBusinessForUser(userId: string): Promise<Business | nul
     throw new Error('userId must be a non-empty string');
   }
 
-  const supabase = await createClient();
+  const supabase = await createServerClient();
 
   const { data, error } = await supabase
     .from('businesses')
