@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getNextStatus, isFinished } from '@/lib/actions/skull-helpers'
 import { sendFinishedNotification } from '@/lib/notifications/send-finished'
+import { getBusinessStages, getFinalStage } from '@/lib/queries/stages'
 import type { PaymentOption } from '@/lib/types'
 
 export interface AddSkullInput {
@@ -82,15 +83,17 @@ export async function advanceSkullStatus(skullId: string) {
 
   if (fetchError || !skull) throw new Error('Skull not found')
 
-  const nextStatus = getNextStatus(skull.status)
+  // Get business stages to determine final stage dynamically
+  if (!skull.business_id) throw new Error('Skull does not have a business_id')
+  const stages = await getBusinessStages(skull.business_id)
+  const finalStage = getFinalStage(stages)
+
+  const nextStatus = getNextStatus(skull.status as any)
   if (!nextStatus) throw new Error('Already at final status')
 
-  let statusToSet = nextStatus
-
-  // Auto-transition from Finished to Pending Pickup
-  if (isFinished(nextStatus)) {
-    statusToSet = 'Pending Pickup'
-  }
+  // Auto-transition to final stage (no intermediate stages after final)
+  // This is now dynamic based on business configuration
+  const statusToSet = nextStatus
 
   const { error: updateError } = await supabase
     .from('skulls')
@@ -99,8 +102,8 @@ export async function advanceSkullStatus(skullId: string) {
 
   if (updateError) throw new Error(`Update failed: ${updateError.message}`)
 
-  // Send notification if advancing to Finished
-  if (isFinished(nextStatus)) {
+  // Send notification if advancing to final stage
+  if (statusToSet === finalStage) {
     try {
       const { data: claimed } = await supabase
         .from('skulls')
