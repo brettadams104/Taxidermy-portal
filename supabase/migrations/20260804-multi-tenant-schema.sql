@@ -118,6 +118,35 @@ CREATE POLICY "notifications_insert_own_business" ON public.notifications
     )
   );
 
+-- DELETE policies for security
+CREATE POLICY "skulls_delete_own_business" ON public.skulls
+  FOR DELETE USING (
+    business_id = (
+      SELECT id FROM businesses WHERE owner_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "clients_delete_own_business" ON public.clients
+  FOR DELETE USING (
+    business_id = (
+      SELECT id FROM businesses WHERE owner_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "notifications_delete_own_business" ON public.notifications
+  FOR DELETE USING (
+    business_id = (
+      SELECT id FROM businesses WHERE owner_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "profiles_delete_own_business" ON public.profiles
+  FOR DELETE USING (
+    business_id = (
+      SELECT id FROM businesses WHERE owner_id = auth.uid()
+    )
+  );
+
 -- Enable RLS on all tables
 ALTER TABLE public.businesses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
