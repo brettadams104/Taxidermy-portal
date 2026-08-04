@@ -31,14 +31,14 @@ ALTER TABLE public.skulls DROP CONSTRAINT IF EXISTS check_valid_status;
 
 -- Create RLS policies for multi-tenancy
 -- Businesses: users can only see their own business
-CREATE POLICY "businesses_select_own" ON public.businesses
+CREATE POLICY IF NOT EXISTS "businesses_select_own" ON public.businesses
   FOR SELECT USING (auth.uid() = owner_id);
 
-CREATE POLICY "businesses_update_own" ON public.businesses
+CREATE POLICY IF NOT EXISTS "businesses_update_own" ON public.businesses
   FOR UPDATE USING (auth.uid() = owner_id);
 
 -- Profiles: users can see profiles in their business
-CREATE POLICY "profiles_business_isolation" ON public.profiles
+CREATE POLICY IF NOT EXISTS "profiles_business_isolation" ON public.profiles
   FOR SELECT USING (
     business_id = (
       SELECT id FROM businesses WHERE owner_id = auth.uid()
@@ -46,21 +46,21 @@ CREATE POLICY "profiles_business_isolation" ON public.profiles
   );
 
 -- Skulls: users can only see skulls in their business
-CREATE POLICY "skulls_business_isolation" ON public.skulls
+CREATE POLICY IF NOT EXISTS "skulls_business_isolation" ON public.skulls
   FOR SELECT USING (
     business_id = (
       SELECT id FROM businesses WHERE owner_id = auth.uid()
     )
   );
 
-CREATE POLICY "skulls_insert_own_business" ON public.skulls
+CREATE POLICY IF NOT EXISTS "skulls_insert_own_business" ON public.skulls
   FOR INSERT WITH CHECK (
     business_id = (
       SELECT id FROM businesses WHERE owner_id = auth.uid()
     )
   );
 
-CREATE POLICY "skulls_update_own_business" ON public.skulls
+CREATE POLICY IF NOT EXISTS "skulls_update_own_business" ON public.skulls
   FOR UPDATE USING (
     business_id = (
       SELECT id FROM businesses WHERE owner_id = auth.uid()
@@ -68,21 +68,21 @@ CREATE POLICY "skulls_update_own_business" ON public.skulls
   );
 
 -- Clients: users can only see clients in their business
-CREATE POLICY "clients_business_isolation" ON public.clients
+CREATE POLICY IF NOT EXISTS "clients_business_isolation" ON public.clients
   FOR SELECT USING (
     business_id = (
       SELECT id FROM businesses WHERE owner_id = auth.uid()
     )
   );
 
-CREATE POLICY "clients_insert_own_business" ON public.clients
+CREATE POLICY IF NOT EXISTS "clients_insert_own_business" ON public.clients
   FOR INSERT WITH CHECK (
     business_id = (
       SELECT id FROM businesses WHERE owner_id = auth.uid()
     )
   );
 
-CREATE POLICY "clients_update_own_business" ON public.clients
+CREATE POLICY IF NOT EXISTS "clients_update_own_business" ON public.clients
   FOR UPDATE USING (
     business_id = (
       SELECT id FROM businesses WHERE owner_id = auth.uid()
@@ -90,14 +90,14 @@ CREATE POLICY "clients_update_own_business" ON public.clients
   );
 
 -- Notifications: users can only see notifications for their business
-CREATE POLICY "notifications_business_isolation" ON public.notifications
+CREATE POLICY IF NOT EXISTS "notifications_business_isolation" ON public.notifications
   FOR SELECT USING (
     business_id = (
       SELECT id FROM businesses WHERE owner_id = auth.uid()
     )
   );
 
-CREATE POLICY "notifications_insert_own_business" ON public.notifications
+CREATE POLICY IF NOT EXISTS "notifications_insert_own_business" ON public.notifications
   FOR INSERT WITH CHECK (
     business_id = (
       SELECT id FROM businesses WHERE owner_id = auth.uid()
