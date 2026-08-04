@@ -1,20 +1,31 @@
 import type { FC } from 'react'
 
 interface StatusProgressBarProps {
-  currentStatus: string
-  allStages: string[]
+  currentStatus?: string
+  allStages?: string[]
+  status?: string
 }
 
 export const StatusProgressBar: FC<StatusProgressBarProps> = ({
   currentStatus,
   allStages,
+  status,
 }) => {
-  const currentIndex = allStages.indexOf(currentStatus)
-  const isComplete = currentIndex === allStages.length - 1
+  // Support both old and new prop names
+  const displayStatus = currentStatus || status || ''
+  const stages = allStages || []
+
+  // If stages are not provided, just show the status text
+  if (stages.length === 0) {
+    return <div className="text-sm font-medium text-gray-700">{displayStatus}</div>
+  }
+
+  const currentIndex = stages.indexOf(displayStatus)
+  const isComplete = currentIndex === stages.length - 1
 
   return (
     <div className="flex items-center gap-2">
-      {allStages.map((stage, index) => {
+      {stages.map((stage, index) => {
         const isCompleted = index < currentIndex
         const isCurrent = index === currentIndex
         const isFuture = index > currentIndex
@@ -30,14 +41,14 @@ export const StatusProgressBar: FC<StatusProgressBarProps> = ({
             >
               {index + 1}
             </div>
-            {index < allStages.length - 1 && (
+            {index < stages.length - 1 && (
               <div className={`w-8 h-1 ${isCompleted ? 'bg-green-600' : 'bg-gray-300'}`} />
             )}
           </div>
         );
       })}
       <span className="text-sm font-medium text-gray-700 ml-2">
-        {currentStatus}
+        {displayStatus}
       </span>
     </div>
   )
