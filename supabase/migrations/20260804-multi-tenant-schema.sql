@@ -45,6 +45,20 @@ CREATE POLICY "profiles_business_isolation" ON public.profiles
     )
   );
 
+CREATE POLICY "profiles_insert_own_business" ON public.profiles
+  FOR INSERT WITH CHECK (
+    business_id = (
+      SELECT id FROM businesses WHERE owner_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "profiles_update_own_business" ON public.profiles
+  FOR UPDATE USING (
+    business_id = (
+      SELECT id FROM businesses WHERE owner_id = auth.uid()
+    )
+  );
+
 -- Skulls: users can only see skulls in their business
 CREATE POLICY "skulls_business_isolation" ON public.skulls
   FOR SELECT USING (
@@ -106,3 +120,7 @@ CREATE POLICY "notifications_insert_own_business" ON public.notifications
 
 -- Enable RLS on all tables
 ALTER TABLE public.businesses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.skulls ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
