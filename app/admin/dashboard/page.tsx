@@ -1,40 +1,49 @@
 import { createClient } from '@/lib/supabase/server'
+import { requireBusiness } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { SKULL_STATUSES } from '@/lib/constants'
 import { SkullCard } from '@/components/skull-card'
 import { AdvanceStatusButton } from '@/app/admin/clients/[id]/advance-status-button'
 import { StagesDropdown } from './stages-dropdown'
 import { MarkPickedUpButton } from './mark-picked-up-button'
+import { getAllSkullsByBusiness, getSkullsInProgressWithClients, getSkullsByStatus } from '@/lib/queries/skulls'
+import { getFinalStage } from '@/lib/queries/stages'
 import type { Skull, SkullStatus } from '@/lib/types'
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
+  const business = await requireBusiness()
 
-  const { data: skulls } = await supabase.from('skulls').select('status, price, amount_paid')
-  const { data: profiles } = await supabase.from('profiles').select('id').eq('role', 'client')
-  const { data: activeProjects } = await supabase
-    .from('skulls')
-    .select('*, profiles(name)')
-    .neq('status', 'Finished')
-    .neq('status', 'Pending Pickup')
-    .neq('status', 'Picked Up')
-    .order('created_at', { ascending: false })
+  // Get business configuration
+  const stages = business.stages || []
+  const finalStage = stages.length > 0 ? stages[stages.length - 1] : 'Completed'
 
-  const { data: pendingPickupSkulls } = await supabase
-    .from('skulls')
-    .select('*, profiles(name)')
-    .eq('status', 'Pending Pickup')
-    .order('created_at', { ascending: false })
+  // Fetch all skulls for this business
+  const allSkulls = await getAllSkullsByBusiness(business.id)
 
-  const totalClients = profiles?.length ?? 0
-  const completedCount = skulls?.filter(sk => sk.status === 'Picked Up').length ?? 0
-  const pendingPickupCount = skulls?.filter(sk => sk.status === 'Pending Pickup').length ?? 0
-  const inProgressCount = skulls?.filter(sk => sk.status !== 'Finished' && sk.status !== 'Pending Pickup' && sk.status !== 'Picked Up').length ?? 0
-  const statusCounts = SKULL_STATUSES.reduce<Record<string, number>>((acc, s) => {
-    acc[s] = skulls?.filter(sk => sk.status === s).length ?? 0
-    return acc
-  }, {})
-  const totalOutstanding = skulls?.reduce((sum, sk) => {
+  // Fetch active projects (not in final stage)
+  const activeProjects = await getSkullsInProgressWithClients(business.id, finalStage)
+
+  // Fetch skulls in final stage (completed)
+  const completedSkulls = await getSkullsByStatus(finalStage, business.id)
+
+  // Calculate stats
+  const totalClients = allSkulls.length > 0
+    ? (await supabase.from('profiles').select('id').eq('business_id', business.id).eq('role', 'client')).data?.length ?? 0
+    : 0
+
+  const completedCount = completedSkulls.length
+  const inProgressCount = activeProjects.length
+
+  // Calculate status distribution
+  const statusCounts: Record<string, number> = {}
+  stages.forEach(stage => {
+    statusCounts[stage] = 0
+  })
+  allSkulls.forEach(skull => {
+    statusCounts[skull.status] = (statusCounts[skull.status] || 0) + 1
+  })
+
+  const totalOutstanding = allSkulls.reduce((sum, sk) => {
     if (sk.price == null) return sum
     return sum + Math.max(0, sk.price - (sk.amount_paid ?? 0))
   }, 0) ?? 0
@@ -111,7 +120,7 @@ export default async function AdminDashboardPage() {
       {/* Project Stages */}
       <div>
         <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--primary)' }}>Project Stages</h2>
-        <StagesDropdown statuses={SKULL_STATUSES} counts={statusCounts} />
+        <StagesDropdown statuses={stages} counts={statusCounts} />
       </div>
 
       {/* Active Projects */}
@@ -158,22 +167,25 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Pending Pickup Projects */}
+      {/* Completed Projects (Final Stage) */}
       <div>
-        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--primary)' }}>Ready for Pickup</h2>
-        {!pendingPickupSkulls?.length && (
+        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--primary)' }}>{finalStage}</h2>
+        {!completedSkulls?.length && (
           <div className="rounded-xl p-12 text-center border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
-            <p style={{ color: 'var(--text-muted)' }}>No skulls pending pickup</p>
+            <p style={{ color: 'var(--text-muted)' }}>No projects in {finalStage} stage</p>
           </div>
         )}
         <div className="space-y-4">
-          {pendingPickupSkulls?.map(skull => {
-            const profile = skull.profiles as { name: string | null } | null
+          {completedSkulls?.map(skull => {
+            // Find the client profile for this skull
+            const skullWithProfile = activeProjects.find(s => s.id === skull.id) ||
+                                    (skull as any)
+            const profile = (skullWithProfile as any)?.profiles as { name: string | null } | null
             return (
               <div key={skull.id} className="rounded-xl p-6 border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
                 <div className="mb-4">
                   <p className="font-bold text-lg" style={{ color: 'var(--text)' }}>
-                    {profile?.name ?? 'Unnamed Client'} - Ready for Pickup
+                    {profile?.name ?? 'Unnamed Client'} - {finalStage}
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -184,7 +196,6 @@ export default async function AdminDashboardPage() {
                   >
                     View Details
                   </Link>
-                  <MarkPickedUpButton skullId={skull.id} />
                 </div>
               </div>
             )
