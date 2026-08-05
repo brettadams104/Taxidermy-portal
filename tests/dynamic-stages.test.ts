@@ -1,4 +1,5 @@
-import { isValidStatus, getFinalStage, isSkullCompleted, getInProgressStages } from '@/lib/queries/stages';
+import { isValidStatus, getFinalStage } from '@/lib/queries/stages';
+import { isSkullCompleted, getInProgressStatuses } from '@/lib/types/business';
 
 describe('Dynamic Stages', () => {
   const testStages = ['Received', 'Processing', 'Complete'];
@@ -18,12 +19,12 @@ describe('Dynamic Stages', () => {
   });
 
   it('should get in-progress stages', () => {
-    expect(getInProgressStages(testStages)).toEqual(['Received', 'Processing']);
+    expect(getInProgressStatuses(testStages)).toEqual(['Received', 'Processing']);
   });
 
   it('should handle different stage counts', () => {
     const customStages = ['S1', 'S2', 'S3', 'S4', 'S5'];
     expect(getFinalStage(customStages)).toBe('S5');
-    expect(getInProgressStages(customStages)).toHaveLength(4);
+    expect(getInProgressStatuses(customStages)).toHaveLength(4);
   });
 });

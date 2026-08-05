@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 
 describe('Multi-Tenancy Isolation', () => {
   it('should enforce business_id filter on all skull queries', () => {
