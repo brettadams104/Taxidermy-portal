@@ -3,7 +3,7 @@ export interface Business {
   id: string;
   owner_id: string;
   business_name: string | null;
-  stages: string[]; // e.g., ["Received", "Processing", "Complete"]
+  stages: string[];
   created_at: string;
   updated_at: string;
 }
@@ -13,45 +13,37 @@ export interface CreateBusinessInput {
   stages?: string[];
 }
 
-// Default stages for new businesses
 export const DEFAULT_STAGES = ["Received", "In Progress", "Completed"];
 
 /**
- * Gets the index of the final stage in the workflow
- * @param stages - Array of stage names
- * @returns Index of the final stage
+ * Get the index of the final stage in a workflow.
+ * @param stages - Array of stage names (must not be empty)
+ * @returns Index of the final stage (length - 1)
  * @throws Error if stages array is empty
  */
 export function getFinalStageIndex(stages: string[]): number {
-  if (!stages || stages.length === 0) {
-    throw new Error("Stages array cannot be empty");
+  if (stages.length === 0) {
+    throw new Error('Cannot get final stage index of empty stages array');
   }
   return stages.length - 1;
 }
 
 /**
- * Checks if a skull has been completed (at final stage)
+ * Check if a skull has reached the final stage (completed).
  * @param status - Current status of the skull
- * @param stages - Array of all stage names
- * @returns true if status matches the final stage, false otherwise
- * @throws Error if stages array is empty
+ * @param stages - Array of possible stages
+ * @returns true if status equals the final stage, false otherwise
  */
 export function isSkullCompleted(status: string, stages: string[]): boolean {
-  if (!stages || stages.length === 0) {
-    throw new Error("Stages array cannot be empty");
-  }
+  if (stages.length === 0) return false;
   return status === stages[getFinalStageIndex(stages)];
 }
 
 /**
- * Gets all in-progress statuses (all stages except the final one)
- * @param stages - Array of all stage names
- * @returns Array of in-progress stage names
- * @throws Error if stages array is empty
+ * Get all non-final stages (in-progress stages).
+ * @param stages - Array of all stages
+ * @returns All stages except the final one
  */
 export function getInProgressStatuses(stages: string[]): string[] {
-  if (!stages || stages.length === 0) {
-    throw new Error("Stages array cannot be empty");
-  }
   return stages.slice(0, -1);
 }

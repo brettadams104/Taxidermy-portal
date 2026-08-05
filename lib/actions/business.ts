@@ -1,29 +1,32 @@
 'use server';
 
+import { createClient } from '@/lib/supabase/server';
 import { requireBusiness } from '@/lib/supabase/server';
-import { createServerClient } from '@/lib/supabase/server';
 import type { Business } from '@/lib/types/business';
 
 /**
- * Updates a business's workflow stages and resets in-progress skulls if requested.
- * @param newStages - Array of new stage names
- * @param hasInProgressSkulls - Whether there are in-progress skulls to reset
- * @throws Error if business not found or update fails
+ * Update the stages for the current business.
+ * If there are in-progress skulls, resets them to the first stage.
+ *
+ * @param newStages - Array of stage names
+ * @param hasInProgressSkulls - Whether there are skulls not in the final stage
+ * @throws Error if validation fails or database operations fail
  */
 export async function updateBusinessStages(
   newStages: string[],
   hasInProgressSkulls: boolean
 ): Promise<void> {
-  if (!newStages || newStages.length === 0) {
+  // Validation
+  if (!Array.isArray(newStages) || newStages.length === 0) {
     throw new Error('At least one stage is required');
   }
 
-  if (newStages.some(s => !s?.trim())) {
-    throw new Error('All stages must have names');
+  if (newStages.some((stage) => !stage || stage.trim().length === 0)) {
+    throw new Error('Stage names cannot be empty');
   }
 
+  const supabase = await createClient();
   const business = await requireBusiness();
-  const supabase = await createServerClient();
 
   // Update business stages
   const { error: updateError } = await supabase
@@ -51,27 +54,32 @@ export async function updateBusinessStages(
       .neq('status', finalStage);
 
     if (resetError) {
-      console.error('Failed to reset in-progress skulls:', resetError);
-      // Don't throw - stages were updated successfully
-      // Skulls reset is best-effort
+      throw new Error(`Failed to reset skulls: ${resetError.message}`);
     }
   }
 }
 
 /**
- * Retrieves business settings (stages and in-progress skull status).
- * @returns Business object and flag indicating if there are in-progress skulls
- * @throws Error if business not found
+ * Get the business settings for the current user, including
+ * whether there are any in-progress skulls.
+ *
+ * @returns Object containing business data and hasInProgressSkulls flag
+ * @throws Error if no business is found or database operations fail
  */
 export async function getBusinessSettings(): Promise<{
   business: Business;
   hasInProgressSkulls: boolean;
 }> {
   const business = await requireBusiness();
-  const supabase = await createServerClient();
+  const supabase = await createClient();
 
-  // Check if there are in-progress skulls
+  if (!business.stages || business.stages.length === 0) {
+    throw new Error('Business has no stages configured');
+  }
+
   const finalStage = business.stages[business.stages.length - 1];
+
+  // Count skulls that are not in the final stage
   const { count, error } = await supabase
     .from('skulls')
     .select('id', { count: 'exact', head: true })
@@ -79,12 +87,7 @@ export async function getBusinessSettings(): Promise<{
     .neq('status', finalStage);
 
   if (error) {
-    console.error('Failed to check in-progress skulls:', error);
-    // Return safe default
-    return {
-      business,
-      hasInProgressSkulls: false,
-    };
+    throw new Error(`Failed to check for in-progress skulls: ${error.message}`);
   }
 
   return {

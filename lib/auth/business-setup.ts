@@ -1,93 +1,92 @@
-// lib/auth/business-setup.ts
-import { createServerClient } from '@/lib/supabase/server';
-import { DEFAULT_STAGES } from '@/lib/types/business';
-import type { Business } from '@/lib/types/business';
-
-// PostgreSQL error code: no rows returned from query
-const NO_ROWS_ERROR_CODE = 'PGRST116';
+import { createClient } from '@/lib/supabase/server'
+import { DEFAULT_STAGES, type Business } from '@/lib/types/business'
 
 /**
- * Creates a new business for a user and links it to their profile.
- * Called during user signup to initialize a business workspace.
- * @param userId - The unique ID of the user who owns the business
- * @param businessName - Optional business name; defaults to 'My Taxidermy Studio'
- * @returns The created Business record with default stages
- * @throws Error if business creation or profile linking fails
+ * Create a new business record for a user during signup.
+ *
+ * @param userId - The Supabase user ID (must be a non-empty string)
+ * @param businessName - Optional business name (defaults to "My Taxidermy Studio")
+ * @returns The created Business object
+ * @throws Error if userId is empty or if database operations fail
  */
 export async function createBusinessForUser(
   userId: string,
   businessName?: string
 ): Promise<Business> {
-  if (!userId?.trim()) {
-    throw new Error('userId must be a non-empty string');
+  if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+    throw new Error('userId must be a non-empty string')
   }
 
-  const supabase = await createServerClient();
-  const sanitizedName = businessName?.trim() || 'My Taxidermy Studio';
+  const supabase = await createClient()
 
-  // Create business record
+  const businessNameToUse = businessName || 'My Taxidermy Studio'
+
+  // Create the business record
   const { data: business, error: businessError } = await supabase
     .from('businesses')
-    .insert({
-      owner_id: userId,
-      business_name: sanitizedName,
-      stages: DEFAULT_STAGES,
-    })
+    .insert([
+      {
+        owner_id: userId,
+        business_name: businessNameToUse,
+        stages: DEFAULT_STAGES,
+      },
+    ])
     .select()
-    .single();
+    .single()
 
   if (businessError) {
-    throw new Error(`Failed to create business for user ${userId}: ${businessError.message}`);
+    throw new Error(
+      `Failed to create business: ${businessError.message}`
+    )
   }
 
-  if (!business) {
-    throw new Error(`Business creation returned no data for user ${userId}`);
-  }
-
-  // Link profile to business
+  // Link the profile to the business
   const { error: profileError } = await supabase
     .from('profiles')
     .update({ business_id: business.id })
-    .eq('id', userId);
+    .eq('id', userId)
 
   if (profileError) {
-    throw new Error(`Failed to link profile to business for user ${userId}: ${profileError.message}`);
+    throw new Error(
+      `Failed to link profile to business: ${profileError.message}`
+    )
   }
 
-  return business as Business;
+  return business as Business
 }
 
 /**
- * Retrieves the business record for a given user.
- * @param userId - The unique ID of the user who owns the business
- * @returns The user's Business record, or null if no business exists
- * @throws Error if the database query fails (other than "no rows" error)
+ * Retrieve the business record for a user.
+ *
+ * @param userId - The Supabase user ID (must be a non-empty string)
+ * @returns The Business object, or null if no business exists for this user
+ * @throws Error if userId is empty or if database operations fail (except "no rows" case)
  */
-export async function getBusinessForUser(userId: string): Promise<Business | null> {
-  if (!userId?.trim()) {
-    throw new Error('userId must be a non-empty string');
+export async function getBusinessForUser(
+  userId: string
+): Promise<Business | null> {
+  if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+    throw new Error('userId must be a non-empty string')
   }
 
-  const supabase = await createServerClient();
+  const supabase = await createClient()
 
-  const { data, error } = await supabase
+  const { data: business, error } = await supabase
     .from('businesses')
     .select('*')
     .eq('owner_id', userId)
-    .single();
+    .single()
 
-  // Handle "no rows" case gracefully
-  if (error && error.code === NO_ROWS_ERROR_CODE) {
-    return null;
+  // PGRST116 is the Postgres error code for "no rows found"
+  if (error && error.code === 'PGRST116') {
+    return null
   }
 
   if (error) {
-    throw new Error(`Failed to retrieve business for user ${userId}: ${error.message}`);
+    throw new Error(
+      `Failed to retrieve business: ${error.message}`
+    )
   }
 
-  if (!data) {
-    return null;
-  }
-
-  return data as Business;
+  return business as Business
 }

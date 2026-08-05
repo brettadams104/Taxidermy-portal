@@ -1,244 +1,173 @@
-// lib/actions/skulls.ts
-'use server';
+'use server'
 
-import { createServerClient, requireBusiness } from '@/lib/supabase/server';
-import { getBusinessStages, getFinalStage, isValidStatus } from '@/lib/queries/stages';
-import { getSkullById } from '@/lib/queries/skulls';
-import type { SkullRecord } from '@/lib/queries/skulls';
+import { revalidatePath } from 'next/cache'
+import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getNextStatus, isFinished } from '@/lib/actions/skull-helpers'
+import { sendFinishedNotification } from '@/lib/notifications/send-finished'
+import { getBusinessStages, getFinalStage } from '@/lib/queries/stages'
+import type { PaymentOption } from '@/lib/types'
 
-/**
- * Server action to update a skull's status to the next stage in the workflow.
- * Enforces business_id multi-tenancy and validates status against business's stages.
- * When skull reaches final stage, sends notification instead of auto-transitioning.
- * @param skullId - The skull ID to update
- * @param newStatus - The new status/stage name
- * @returns Updated skull record
- * @throws Error if skull not found, status invalid, or update fails
- */
-export async function updateSkullStatus(skullId: string, newStatus: string): Promise<SkullRecord> {
-  if (!skullId?.trim()) {
-    throw new Error('skullId must be a non-empty string');
-  }
-  if (!newStatus?.trim()) {
-    throw new Error('newStatus must be a non-empty string');
-  }
+export interface AddSkullInput {
+  clientId: string
+  points: number | null
+  dnrTagNumber: string | null
+  dateReceived: string
+  price: number | null
+  paymentOption: PaymentOption | null
+  notes: string | null
+}
 
-  // Require authentication and business context
-  const business = await requireBusiness();
+export async function addSkull(input: AddSkullInput) {
+  const supabase = await createClient()
+  const amountPaid = input.price != null && input.paymentOption === 'full_upfront'
+    ? input.price
+    : input.price != null && input.paymentOption === 'half_upfront'
+    ? Math.round(input.price / 2 * 100) / 100
+    : 0
+  const { error } = await supabase.from('skulls').insert({
+    client_id: input.clientId,
+    points: input.points,
+    dnr_tag_number: input.dnrTagNumber,
+    date_received: input.dateReceived,
+    price: input.price,
+    payment_option: input.paymentOption,
+    notes: input.notes,
+    amount_paid: amountPaid,
+  })
+  if (error) throw new Error(error.message)
+  revalidatePath(`/admin/clients/${input.clientId}`)
+}
 
-  // Retrieve the skull and verify it belongs to this business
-  const skull = await getSkullById(skullId, business.id);
-  if (!skull) {
-    throw new Error(`Skull not found: ${skullId}`);
-  }
+export async function updateSkull(skullId: string, input: {
+  points: number | null
+  dnrTagNumber: string | null
+  dateReceived: string
+  price: number | null
+  paymentOption: PaymentOption | null
+  notes: string | null
+}) {
+  const supabase = await createClient()
+  const { data: skull } = await supabase.from('skulls').select('client_id').eq('id', skullId).single()
 
-  // Validate that the new status is valid for this business
-  const stages = await getBusinessStages(business.id);
-  if (!isValidStatus(newStatus, stages)) {
-    throw new Error(`Invalid status "${newStatus}" for business workflow. Valid statuses: ${stages.join(', ')}`);
-  }
+  // Auto-set amount_paid based on payment option
+  const amountPaid = input.price != null && input.paymentOption === 'full_upfront'
+    ? input.price
+    : input.price != null && input.paymentOption === 'half_upfront'
+    ? Math.round(input.price / 2 * 100) / 100
+    : undefined
 
-  const supabase = await createServerClient();
+  const { error } = await supabase.from('skulls').update({
+    points: input.points,
+    dnr_tag_number: input.dnrTagNumber,
+    date_received: input.dateReceived,
+    price: input.price,
+    payment_option: input.paymentOption,
+    notes: input.notes,
+    ...(amountPaid !== undefined ? { amount_paid: amountPaid } : {}),
+  }).eq('id', skullId)
+  if (error) throw new Error(error.message)
+  revalidatePath(`/admin/skulls/${skullId}`)
+  if (skull?.client_id) revalidatePath(`/admin/clients/${skull.client_id}`)
+}
 
-  // Update the skull status
-  const { data: updatedSkull, error } = await supabase
+export async function advanceSkullStatus(skullId: string) {
+  const supabase = await createClient()
+  const adminClient = createAdminClient()
+
+  const { data: skull, error: fetchError } = await supabase
     .from('skulls')
-    .update({
-      status: newStatus,
-      updated_at: new Date().toISOString(),
-    })
+    .select('*, client:profiles(id, name, phone)')
     .eq('id', skullId)
-    .eq('business_id', business.id)
-    .select()
-    .single();
+    .single()
 
-  if (error) {
-    throw new Error(`Failed to update skull status: ${error.message}`);
-  }
+  if (fetchError || !skull) throw new Error('Skull not found')
 
-  if (!updatedSkull) {
-    throw new Error(`Skull update returned no data for: ${skullId}`);
-  }
+  // Get business stages to determine final stage dynamically
+  if (!skull.business_id) throw new Error('Skull does not have a business_id')
+  const stages = await getBusinessStages(skull.business_id)
+  const finalStage = getFinalStage(stages)
 
-  // If skull reached final stage, send notification
-  const finalStage = getFinalStage(stages);
-  if (newStatus === finalStage) {
-    await notifySkullReachedFinalStage(skullId, business.id);
-  }
+  const nextStatus = getNextStatus(skull.status as any)
+  if (!nextStatus) throw new Error('Already at final status')
 
-  return updatedSkull as SkullRecord;
-}
+  // Auto-transition to final stage (no intermediate stages after final)
+  // This is now dynamic based on business configuration
+  const statusToSet = nextStatus
 
-/**
- * Sends a notification when a skull reaches the final stage.
- * In multi-stage workflows, this replaces the old hardcoded "auto-transition" behavior.
- * Now skulls stay at the final stage and a notification alerts the business.
- * @param skullId - The skull ID that reached final stage
- * @param businessId - The business ID for multi-tenancy
- * @throws Error if notification creation fails
- */
-async function notifySkullReachedFinalStage(skullId: string, businessId: string): Promise<void> {
-  const supabase = await createServerClient();
-
-  const { error } = await supabase
-    .from('notifications')
-    .insert({
-      business_id: businessId,
-      skull_id: skullId,
-      type: 'skull_completed',
-      message: `Skull ${skullId} has reached the final stage`,
-      read: false,
-      created_at: new Date().toISOString(),
-    });
-
-  if (error) {
-    console.error(`Failed to create notification for skull ${skullId}:`, error);
-    // Don't throw - notification failure shouldn't block the status update
-  }
-}
-
-/**
- * Creates a new skull record for a business and client.
- * Automatically sets the skull to the first stage of the business workflow.
- * @param clientId - The client this skull belongs to
- * @param metadata - Optional additional data to store with the skull
- * @returns Created skull record
- * @throws Error if skull creation fails
- */
-export async function createSkull(clientId: string, metadata?: Record<string, any>): Promise<SkullRecord> {
-  if (!clientId?.trim()) {
-    throw new Error('clientId must be a non-empty string');
-  }
-
-  // Require authentication and business context
-  const business = await requireBusiness();
-
-  // Get the first stage for this business
-  const stages = await getBusinessStages(business.id);
-  if (!stages || stages.length === 0) {
-    throw new Error('Business has no stages configured');
-  }
-
-  const initialStage = stages[0];
-
-  const supabase = await createServerClient();
-
-  // Create the skull at the initial stage
-  const { data: skull, error } = await supabase
+  const { error: updateError } = await supabase
     .from('skulls')
-    .insert({
-      business_id: business.id,
-      client_id: clientId,
-      status: initialStage,
-      ...metadata,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    throw new Error(`Failed to create skull: ${error.message}`);
-  }
-
-  if (!skull) {
-    throw new Error('Skull creation returned no data');
-  }
-
-  return skull as SkullRecord;
-}
-
-/**
- * Deletes a skull record from the database.
- * Enforces business_id multi-tenancy to prevent cross-business deletion.
- * @param skullId - The skull ID to delete
- * @returns true if deletion was successful
- * @throws Error if skull not found or deletion fails
- */
-export async function deleteSkull(skullId: string): Promise<boolean> {
-  if (!skullId?.trim()) {
-    throw new Error('skullId must be a non-empty string');
-  }
-
-  // Require authentication and business context
-  const business = await requireBusiness();
-
-  // Verify skull belongs to this business before deleting
-  const skull = await getSkullById(skullId, business.id);
-  if (!skull) {
-    throw new Error(`Skull not found: ${skullId}`);
-  }
-
-  const supabase = await createServerClient();
-
-  // Delete the skull (RLS policies will enforce business_id check)
-  const { error } = await supabase
-    .from('skulls')
-    .delete()
+    .update({ status: statusToSet })
     .eq('id', skullId)
-    .eq('business_id', business.id);
 
-  if (error) {
-    throw new Error(`Failed to delete skull: ${error.message}`);
+  if (updateError) throw new Error(`Update failed: ${updateError.message}`)
+
+  // Send notification if advancing to final stage
+  if (statusToSet === finalStage) {
+    try {
+      const { data: claimed } = await supabase
+        .from('skulls')
+        .update({ finished_notified: true })
+        .eq('id', skullId)
+        .eq('finished_notified', false)
+        .select('id')
+
+      if (claimed && claimed.length > 0) {
+        const { data: { user } } = await adminClient.auth.admin.getUserById(skull.client_id)
+        const email = user?.email
+
+        if (email) {
+          const { data: templates } = await supabase
+            .from('notification_templates')
+            .select('*')
+            .in('type', ['email', 'sms'])
+          const emailTemplate = templates?.find(t => t.type === 'email')
+          const smsTemplate = templates?.find(t => t.type === 'sms')
+
+          if (emailTemplate && smsTemplate) {
+            await sendFinishedNotification({
+              clientEmail: email,
+              clientPhone: skull.client?.phone ?? null,
+              clientName: skull.client?.name ?? null,
+              points: skull.points,
+              dnrTag: skull.dnr_tag_number,
+              emailTemplate: { subject: emailTemplate.subject ?? 'Your skull is ready!', body: emailTemplate.body },
+              smsTemplate: { body: smsTemplate.body },
+            })
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Notification error:', err)
+    }
   }
 
-  return true;
+  revalidatePath(`/admin/clients/${skull.client_id}`)
+  revalidatePath(`/admin/dashboard`)
 }
 
-/**
- * Updates skull metadata while preserving status and other controlled fields.
- * Only allows updating custom metadata, not workflow-critical fields.
- * @param skullId - The skull ID to update
- * @param metadata - Key-value pairs to update (custom fields only)
- * @returns Updated skull record
- * @throws Error if skull not found or update fails
- */
-export async function updateSkullMetadata(
-  skullId: string,
-  metadata: Record<string, any>
-): Promise<SkullRecord> {
-  if (!skullId?.trim()) {
-    throw new Error('skullId must be a non-empty string');
-  }
-  if (!metadata || typeof metadata !== 'object' || Object.keys(metadata).length === 0) {
-    throw new Error('metadata must be a non-empty object');
-  }
 
-  // Prevent updating protected fields
-  const protectedFields = ['id', 'business_id', 'client_id', 'status', 'created_at'];
-  const hasProtectedFields = Object.keys(metadata).some((key) => protectedFields.includes(key));
-  if (hasProtectedFields) {
-    throw new Error(`Cannot update protected fields: ${protectedFields.join(', ')}`);
-  }
+export async function updateSkullStatusDirect(skullId: string, newStatus: string) {
+  const supabase = await createClient()
 
-  // Require authentication and business context
-  const business = await requireBusiness();
-
-  // Verify skull belongs to this business
-  const skull = await getSkullById(skullId, business.id);
-  if (!skull) {
-    throw new Error(`Skull not found: ${skullId}`);
-  }
-
-  const supabase = await createServerClient();
-
-  // Update metadata
-  const { data: updatedSkull, error } = await supabase
+  const { data: skull, error: fetchError } = await supabase
     .from('skulls')
-    .update({
-      ...metadata,
-      updated_at: new Date().toISOString(),
-    })
+    .select('client_id, status')
     .eq('id', skullId)
-    .eq('business_id', business.id)
-    .select()
-    .single();
+    .single()
 
-  if (error) {
-    throw new Error(`Failed to update skull metadata: ${error.message}`);
-  }
+  if (fetchError || !skull) throw new Error('Skull not found')
 
-  if (!updatedSkull) {
-    throw new Error(`Skull metadata update returned no data for: ${skullId}`);
-  }
+  const { error: updateError } = await supabase
+    .from('skulls')
+    .update({ status: newStatus })
+    .eq('id', skullId)
 
-  return updatedSkull as SkullRecord;
+  if (updateError) throw new Error(updateError.message)
+
+  revalidatePath(`/admin/clients/${skull.client_id}`)
+  revalidatePath(`/admin/skulls/${skullId}`)
+  revalidatePath(`/admin/dashboard`)
+  revalidatePath(`/admin/skulls/pending-pickup`)
+  revalidatePath(`/admin/skulls/finished`)
 }

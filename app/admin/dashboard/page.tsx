@@ -1,102 +1,198 @@
-import { StatusProgressBar } from '@/components/status-progress-bar';
-import { requireBusiness } from '@/lib/supabase/server';
-import { getFinalStage } from '@/lib/queries/stages';
-import { getAllSkullsByBusiness } from '@/lib/queries/skulls';
+import { createClient } from '@/lib/supabase/server'
+import { requireBusiness } from '@/lib/supabase/server'
+import Link from 'next/link'
+import { SkullCard } from '@/components/skull-card'
+import { AdvanceStatusButton } from '@/app/admin/clients/[id]/advance-status-button'
+import { StagesDropdown } from './stages-dropdown'
+import { getAllSkullsByBusiness, getSkullsInProgressWithClients, getSkullsByStatus } from '@/lib/queries/skulls'
+import { getFinalStage } from '@/lib/queries/stages'
+import type { Skull, SkullStatus } from '@/lib/types'
 
-export default async function DashboardPage() {
-  // Get current user's business (required)
-  const business = await requireBusiness();
-  const finalStage = getFinalStage(business.stages);
+export default async function AdminDashboardPage() {
+  const supabase = await createClient()
+  const business = await requireBusiness()
 
-  // Get skulls for this business using multi-tenant query
-  const skulls = await getAllSkullsByBusiness(business.id);
+  // Get business configuration
+  const stages = business.stages || []
+  const finalStage = stages.length > 0 ? stages[stages.length - 1] : 'Completed'
 
-  // Filter based on dynamic final stage (not hardcoded 'Finished'/'Picked Up')
-  const activeProjects = skulls.filter(s => s.status !== finalStage);
-  const completedProjects = skulls.filter(s => s.status === finalStage);
+  // Fetch all skulls for this business
+  const allSkulls = await getAllSkullsByBusiness(business.id)
 
-  // Get counts by stage
-  const stageCounts = business.stages.map(stage => ({
-    stage,
-    count: skulls.filter(s => s.status === stage).length,
-  }));
+  // Fetch active projects (not in final stage)
+  const activeProjects = await getSkullsInProgressWithClients(business.id, finalStage)
+
+  // Fetch skulls in final stage (completed)
+  const completedSkulls = await getSkullsByStatus(finalStage, business.id)
+
+  // Calculate stats
+  const totalClients = allSkulls.length > 0
+    ? (await supabase.from('profiles').select('id').eq('business_id', business.id).eq('role', 'client')).data?.length ?? 0
+    : 0
+
+  const completedCount = completedSkulls.length
+  const inProgressCount = activeProjects.length
+
+  // Calculate status distribution
+  const statusCounts: Record<string, number> = {}
+  stages.forEach(stage => {
+    statusCounts[stage] = 0
+  })
+  allSkulls.forEach(skull => {
+    statusCounts[skull.status] = (statusCounts[skull.status] || 0) + 1
+  })
+
+  const totalOutstanding = allSkulls.reduce((sum, sk) => {
+    if (sk.price == null) return sum
+    return sum + Math.max(0, sk.price - (sk.amount_paid ?? 0))
+  }, 0) ?? 0
 
   return (
-    <div className="p-8">
+    <div className="space-y-8">
       {/* Header */}
-      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-4xl font-black" style={{ color: 'var(--primary)' }}>Dashboard</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Manage your European mount projects</p>
+        </div>
+        <Link href="/admin/clients/new" className="text-white font-semibold px-6 py-3 rounded-lg transition-all hover:shadow-lg" style={{ backgroundColor: 'var(--primary)' }}>
+          + New Client
+        </Link>
+      </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-gray-600 mb-2">Total Projects</h3>
-          <p className="text-3xl font-bold">{skulls.length}</p>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Total Clients */}
+        <Link href="/admin/clients" className="group">
+          <div className="rounded-xl p-6 h-full border-2 hover:shadow-xl transition-all" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+            <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>Total Clients</p>
+            <p className="text-4xl font-black mb-2" style={{ color: 'var(--primary)' }}>{totalClients}</p>
+            <p className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>View all</p>
+          </div>
+        </Link>
+
+        {/* In Progress */}
+        <div className="rounded-xl p-6 border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+          <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>In Progress</p>
+          <p className="text-4xl font-black mb-2" style={{ color: 'var(--accent)' }}>{inProgressCount}</p>
+          <div className="h-1 rounded-full" style={{ backgroundColor: 'var(--accent)' }}></div>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-gray-600 mb-2">In Progress</h3>
-          <p className="text-3xl font-bold">{activeProjects.length}</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-gray-600 mb-2">Completed</h3>
-          <p className="text-3xl font-bold">{completedProjects.length}</p>
+
+        {/* Completed Skulls */}
+        <Link href="/admin/skulls/finished" className="group">
+          <div className="rounded-xl p-6 h-full border-2 hover:shadow-xl transition-all" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+            <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>Completed</p>
+            <p className="text-4xl font-black mb-2" style={{ color: 'var(--accent)' }}>{completedCount}</p>
+            <p className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>View all</p>
+          </div>
+        </Link>
+
+
+        {/* Outstanding Balance */}
+        <div className="rounded-xl p-6 border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+          <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>Outstanding</p>
+          <p className="text-3xl font-black" style={{ color: totalOutstanding > 0 ? 'var(--danger)' : 'var(--success)' }}>${totalOutstanding.toFixed(0)}</p>
         </div>
       </div>
 
-      {/* Active Projects Section */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Active Projects</h2>
-        <div className="grid gap-4">
-          {activeProjects.length === 0 ? (
-            <p className="text-gray-500">No active projects</p>
-          ) : (
-            activeProjects.map(skull => (
-              <div key={skull.id} className="bg-white p-4 rounded-lg shadow">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="font-semibold">{skull.client_id}</h3>
-                  <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                    {skull.status}
-                  </span>
-                </div>
-                {/* Pass dynamic stages to progress bar */}
-                <StatusProgressBar
-                  currentStatus={skull.status}
-                  allStages={business.stages}
-                />
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Completed Projects Section */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Completed Projects</h2>
-        <div className="grid gap-4">
-          {completedProjects.length === 0 ? (
-            <p className="text-gray-500">No completed projects</p>
-          ) : (
-            completedProjects.map(skull => (
-              <div key={skull.id} className="bg-white p-4 rounded-lg shadow">
-                <p className="font-semibold">Client: {skull.client_id}</p>
-                <p className="text-sm text-gray-600">Status: {skull.status}</p>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Stage Distribution */}
-      <div className="mt-8">
-        <h2 className="text-2xl font-bold mb-4">Projects by Stage</h2>
-        <div className="grid gap-2">
-          {stageCounts.map(({ stage, count }) => (
-            <div key={stage} className="flex justify-between bg-gray-50 p-3 rounded">
-              <span>{stage}</span>
-              <span className="font-semibold">{count}</span>
+      {/* Analytics Section */}
+      <Link href="/admin/stats" className="group">
+        <div className="rounded-xl p-6 border-2 hover:shadow-xl transition-all" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-bold text-lg" style={{ color: 'var(--text)' }}>Business Stats & Trends</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Revenue, completion rates, and more</p>
             </div>
-          ))}
+            <span className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>→</span>
+          </div>
+        </div>
+      </Link>
+
+      {/* Project Stages */}
+      <div>
+        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--primary)' }}>Project Stages</h2>
+        <StagesDropdown statuses={stages} counts={statusCounts} />
+      </div>
+
+      {/* Active Projects */}
+      <div>
+        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--primary)' }}>Active Projects</h2>
+        {!activeProjects?.length && (
+          <div className="rounded-xl p-12 text-center border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+            <p style={{ color: 'var(--text-muted)' }}>No active projects</p>
+          </div>
+        )}
+        <div className="space-y-4">
+          {activeProjects?.map(project => {
+            const profile = project.profiles as { name: string | null } | null
+            const skull = project as unknown as Skull
+            return (
+              <div key={project.id} className="rounded-xl p-6 border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+                <div className="mb-4">
+                  <p className="font-bold text-lg" style={{ color: 'var(--text)' }}>
+                    {profile?.name ?? 'Unnamed Client'}
+                  </p>
+                  <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Mount preparation in progress</p>
+                </div>
+                <SkullCard skull={skull} />
+                <div className="flex gap-2 mt-4">
+                  <AdvanceStatusButton skullId={project.id} currentStatus={project.status as SkullStatus} />
+                  <Link
+                    href={`/admin/skulls/${project.id}/edit`}
+                    className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                    style={{ backgroundColor: 'var(--background)', color: 'var(--text)' }}
+                  >
+                    Edit
+                  </Link>
+                  <Link
+                    href={`/admin/skulls/${project.id}`}
+                    className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                    style={{ backgroundColor: 'var(--background)', color: 'var(--text)' }}
+                  >
+                    Manage
+                  </Link>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Completed Projects (Final Stage) */}
+      <div>
+        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--primary)' }}>{finalStage}</h2>
+        {!completedSkulls?.length && (
+          <div className="rounded-xl p-12 text-center border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+            <p style={{ color: 'var(--text-muted)' }}>No projects in {finalStage} stage</p>
+          </div>
+        )}
+        <div className="space-y-4">
+          {completedSkulls?.map(skull => {
+            // Find the client profile for this skull
+            const skullWithProfile = activeProjects.find(s => s.id === skull.id) ||
+                                    (skull as any)
+            const profile = (skullWithProfile as any)?.profiles as { name: string | null } | null
+            return (
+              <div key={skull.id} className="rounded-xl p-6 border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+                <div className="mb-4">
+                  <p className="font-bold text-lg" style={{ color: 'var(--text)' }}>
+                    {profile?.name ?? 'Unnamed Client'} - {finalStage}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Link
+                    href={`/admin/skulls/${skull.id}`}
+                    className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                    style={{ backgroundColor: 'var(--background)', color: 'var(--text)' }}
+                  >
+                    View Details
+                  </Link>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -1,204 +1,204 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
-import { createBusinessForUser } from '@/lib/auth/business-setup';
-import Link from 'next/link';
+import { useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 // Validation helpers
+function validateEmail(email: string): string | null {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email)) {
+    return 'Please enter a valid email address'
+  }
+  return null
+}
+
 function validatePassword(password: string): string | null {
   if (password.length < 8) {
-    return 'Password must be at least 8 characters';
+    return 'Password must be at least 8 characters long'
   }
-  return null;
+  return null
 }
 
-function validateEmail(email: string): string | null {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return 'Please enter a valid email address';
+// Error message mapping for user-friendly messages
+function getUserFriendlyError(error: string): string {
+  if (error.includes('already registered')) {
+    return 'This email is already registered. Try signing in instead.'
   }
-  return null;
-}
-
-// Error message mapper
-function getUserFriendlyError(error: unknown): string {
-  if (error instanceof Error) {
-    const message = error.message.toLowerCase();
-    if (message.includes('email already registered') || message.includes('user already exists')) {
-      return 'This email is already registered. Please sign in or use a different email.';
-    }
-    if (message.includes('password')) {
-      return 'Password does not meet requirements. Please use at least 8 characters.';
-    }
-    if (message.includes('failed to create business')) {
-      return 'Account created, but we had trouble setting up your business. Please contact support.';
-    }
+  if (error.includes('invalid email')) {
+    return 'Please enter a valid email address'
   }
-  return 'An error occurred during signup. Please try again.';
+  if (error.includes('password')) {
+    return 'Password does not meet security requirements'
+  }
+  if (error.includes('network') || error.includes('failed to fetch')) {
+    return 'Network error. Please check your connection and try again.'
+  }
+  return 'An error occurred. Please try again.'
 }
 
 export default function SignupPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [businessName, setBusinessName] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [businessCreationWarning, setBusinessCreationWarning] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [businessCreationWarning, setBusinessCreationWarning] = useState<string | null>(null)
+  const [showWarningModal, setShowWarningModal] = useState(false)
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setBusinessCreationWarning(null);
+  async function handleSignup(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
 
-    // Validate email
-    const emailError = validateEmail(email);
+    // Validate inputs
+    const emailError = validateEmail(email)
     if (emailError) {
-      setError(emailError);
-      return;
+      setError(emailError)
+      setLoading(false)
+      return
     }
 
-    // Validate password
-    const passwordError = validatePassword(password);
+    const passwordError = validatePassword(password)
     if (passwordError) {
-      setError(passwordError);
-      return;
+      setError(passwordError)
+      setLoading(false)
+      return
     }
-
-    setIsLoading(true);
 
     try {
-      // Initialize Supabase client for auth
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-      if (!supabaseUrl || !supabaseKey) {
-        throw new Error('Supabase configuration missing');
-      }
-
-      const supabase = createClient(supabaseUrl, supabaseKey);
-
-      // Sign up user with email and password
-      const { data: { user }, error: signupError } = await supabase.auth.signUp({
+      const supabase = createClient()
+      const { data, error: signupError } = await supabase.auth.signUp({
         email,
         password,
-      });
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      })
 
       if (signupError) {
-        throw signupError;
+        setError(getUserFriendlyError(signupError.message))
+        setLoading(false)
+        return
       }
 
-      if (!user?.id) {
-        throw new Error('Signup succeeded but no user ID returned');
+      if (!data.user?.id) {
+        setError('Failed to create account. Please try again.')
+        setLoading(false)
+        return
       }
 
-      // Create business for the new user (non-blocking)
-      let businessCreationFailed = false;
+      const userId = data.user.id
+
+      // Attempt to create business for user
       try {
-        await createBusinessForUser(user.id, businessName || undefined);
-      } catch (businessError) {
-        console.error('Business creation error:', businessError);
-        businessCreationFailed = true;
-        setBusinessCreationWarning(
-          'Account created successfully, but there was an issue setting up your business workspace. ' +
-          'You may need to refresh or contact support.'
-        );
-      }
+        const response = await fetch('/auth/create-business', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            businessName: `${email.split('@')[0]}'s Studio`,
+          }),
+        })
 
-      // Only redirect if business creation succeeded
-      if (!businessCreationFailed) {
-        router.push('/admin/dashboard');
+        if (!response.ok) {
+          const errorData = await response.json()
+          // Show warning modal but don't block signup
+          setBusinessCreationWarning(
+            errorData.error || 'Failed to create business account'
+          )
+          setShowWarningModal(true)
+          // Still show email confirmation message
+          setSubmitted(true)
+          return
+        }
+
+        // Business created successfully
+        setSubmitted(true)
+        // Small delay before redirecting to allow email confirmation
+        setTimeout(() => {
+          router.push('/dashboard')
+        }, 2000)
+      } catch (businessError) {
+        // Network or other error creating business, but don't block signup
+        setBusinessCreationWarning(
+          'Account created but business setup encountered an issue. Please contact support if needed.'
+        )
+        setShowWarningModal(true)
+        setSubmitted(true)
       }
     } catch (err) {
-      setError(getUserFriendlyError(err));
-      console.error('Signup error:', err);
-    } finally {
-      setIsLoading(false);
+      const message = err instanceof Error ? err.message : 'An error occurred'
+      setError(getUserFriendlyError(message))
+      setLoading(false)
     }
-  };
+  }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md bg-white rounded-lg shadow p-8">
-        <h1 className="text-2xl font-bold mb-6 text-center">Create Account</h1>
+  if (submitted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center max-w-sm">
+          <h1 className="text-2xl font-bold mb-2">Check your email</h1>
+          <p className="text-gray-600">We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account.</p>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded">
-            {error}
-          </div>
-        )}
-
-        {businessCreationWarning && (
-          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded">
-            ⚠️ {businessCreationWarning}
-          </div>
-        )}
-
-        <form onSubmit={handleSignup} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="you@example.com"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="At least 8 characters"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-1">
-              Business Name (Optional)
-            </label>
-            <input
-              id="businessName"
-              type="text"
-              value={businessName}
-              onChange={(e) => setBusinessName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="My Taxidermy Studio"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-          >
-            {isLoading ? 'Creating account...' : 'Sign Up'}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link href="/auth/login" className="text-blue-600 hover:underline">
-              Log in
-            </Link>
-          </p>
+          {showWarningModal && businessCreationWarning && (
+            <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-yellow-800 text-sm">
+                <strong>Note:</strong> {businessCreationWarning}
+              </p>
+              <button
+                onClick={() => setShowWarningModal(false)}
+                className="mt-3 text-yellow-600 hover:text-yellow-700 font-medium text-sm"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
         </div>
       </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        <h1 className="text-2xl font-bold mb-6 text-center">Create Account</h1>
+        <form onSubmit={handleSignup} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              minLength={8}
+              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          {error && <p className="text-red-600 text-sm">{error}</p>}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white rounded-lg py-2 font-medium hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? 'Creating account...' : 'Create Account'}
+          </button>
+        </form>
+        <p className="mt-4 text-center text-sm">
+          Already have an account?{' '}
+          <Link href="/login" className="text-blue-600 hover:underline">Sign in</Link>
+        </p>
+      </div>
     </div>
-  );
+  )
 }
