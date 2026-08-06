@@ -20,10 +20,16 @@ export async function createBusinessForUser(
   }
 
   // Use service role key to bypass RLS policies (needed for creating business records)
-  const supabase = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-  )
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error(
+      `Missing Supabase configuration: ${!supabaseUrl ? 'URL' : ''} ${!serviceRoleKey ? 'Service Role Key' : ''}`
+    )
+  }
+
+  const supabase = createSupabaseClient(supabaseUrl, serviceRoleKey)
 
   const businessNameToUse = businessName || 'My Taxidermy Studio'
 
