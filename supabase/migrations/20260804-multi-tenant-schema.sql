@@ -1,9 +1,12 @@
 -- supabase/migrations/20260804-multi-tenant-schema.sql
 
+-- Remove FK constraint if it exists from previous attempt
+ALTER TABLE IF EXISTS public.businesses DROP CONSTRAINT IF EXISTS businesses_owner_id_fkey;
+
 -- Create businesses table (one per taxidermist)
 CREATE TABLE IF NOT EXISTS public.businesses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+  owner_id UUID NOT NULL UNIQUE,
   business_name TEXT,
   stages JSONB DEFAULT '["Received", "In Progress", "Completed"]'::jsonb NOT NULL,
   created_at TIMESTAMPTZ DEFAULT now(),
