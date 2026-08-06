@@ -1,8 +1,9 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 import { DEFAULT_STAGES, type Business } from '@/lib/types/business'
 
 /**
  * Create a new business record for a user during signup.
+ * Uses service role key to bypass RLS policies.
  *
  * @param userId - The Supabase user ID (must be a non-empty string)
  * @param businessName - Optional business name (defaults to "My Taxidermy Studio")
@@ -17,7 +18,11 @@ export async function createBusinessForUser(
     throw new Error('userId must be a non-empty string')
   }
 
-  const supabase = await createClient()
+  // Use service role key to bypass RLS policies (needed for creating business records)
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  )
 
   const businessNameToUse = businessName || 'My Taxidermy Studio'
 
