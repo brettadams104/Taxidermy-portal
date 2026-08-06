@@ -52,10 +52,10 @@ export async function createBusinessForUser(
     )
   }
 
-  // Link the profile to the business
+  // Link the profile to the business and set role to admin
   const { error: profileError } = await supabase
     .from('profiles')
-    .update({ business_id: business.id })
+    .update({ business_id: business.id, role: 'admin' })
     .eq('id', userId)
 
   if (profileError) {
