@@ -1,4 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/server'
 import { DEFAULT_STAGES, type Business } from '@/lib/types/business'
 
 /**
@@ -19,7 +20,7 @@ export async function createBusinessForUser(
   }
 
   // Use service role key to bypass RLS policies (needed for creating business records)
-  const supabase = createClient(
+  const supabase = createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || '',
     process.env.SUPABASE_SERVICE_ROLE_KEY || ''
   )
