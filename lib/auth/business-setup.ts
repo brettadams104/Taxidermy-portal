@@ -52,11 +52,17 @@ export async function createBusinessForUser(
     )
   }
 
-  // Link the profile to the business and set role to admin
+  // Create or update profile with business_id and admin role
   const { error: profileError } = await supabase
     .from('profiles')
-    .update({ business_id: business.id, role: 'admin' })
-    .eq('id', userId)
+    .upsert(
+      {
+        id: userId,
+        business_id: business.id,
+        role: 'admin',
+      },
+      { onConflict: 'id' }
+    )
 
   if (profileError) {
     throw new Error(
