@@ -52,22 +52,24 @@ export async function createBusinessForUser(
     )
   }
 
-  // Create or update profile with business_id and admin role
-  const { error: profileError } = await supabase
+  // Update profile with business_id and admin role
+  // First try to update, if no rows affected then insert
+  const { error: updateError, count } = await supabase
     .from('profiles')
-    .upsert(
-      {
-        id: userId,
-        business_id: business.id,
-        role: 'admin',
-      },
-      { onConflict: 'id' }
-    )
+    .update({ business_id: business.id, role: 'admin' })
+    .eq('id', userId)
 
-  if (profileError) {
-    throw new Error(
-      `Failed to link profile to business: ${profileError.message}`
-    )
+  // If no rows were updated, the profile doesn't exist yet, so create it
+  if (!updateError && count === 0) {
+    const { error: insertError } = await supabase
+      .from('profiles')
+      .insert({ id: userId, business_id: business.id, role: 'admin' })
+
+    if (insertError) {
+      throw new Error(`Failed to create profile: ${insertError.message}`)
+    }
+  } else if (updateError) {
+    throw new Error(`Failed to link profile to business: ${updateError.message}`)
   }
 
   return business as Business
