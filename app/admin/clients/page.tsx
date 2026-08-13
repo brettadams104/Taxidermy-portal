@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireBusiness } from '@/lib/supabase/server'
 import Link from 'next/link'
+import { InviteClientButton } from './invite-button'
 
 export default async function ClientsPage() {
   const business = await requireBusiness()
@@ -22,9 +23,12 @@ export default async function ClientsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Clients</h1>
-        <Link href="/admin/clients/new" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
-          + New Client
-        </Link>
+        <div className="flex gap-2">
+          <InviteClientButton />
+          <Link href="/admin/clients/new" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
+            + New Client
+          </Link>
+        </div>
       </div>
 
       {!profiles?.length && (
