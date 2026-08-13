@@ -3,12 +3,17 @@
 import { Resend } from 'resend'
 import { generateInvitationLink } from './invitations'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function generateAndSendInvite(email: string) {
   if (!email) {
     throw new Error('Email is required')
   }
+
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) {
+    throw new Error('Resend API key not configured')
+  }
+
+  const resend = new Resend(apiKey)
 
   // Generate the invitation link
   const link = await generateInvitationLink(email)
