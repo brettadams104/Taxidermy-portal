@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { requireBusiness } from '@/lib/supabase/server'
 import { randomUUID } from 'crypto'
 
 export interface CreateClientInput {
@@ -13,6 +14,7 @@ export interface CreateClientInput {
 }
 
 export async function createClientAccount(input: CreateClientInput) {
+  const business = await requireBusiness()
   const supabase = await createClient()
 
   // No email — create a profile-only client (no portal access)
@@ -20,6 +22,7 @@ export async function createClientAccount(input: CreateClientInput) {
     const id = randomUUID()
     const { error } = await supabase.from('profiles').insert({
       id,
+      business_id: business.id,
       name: input.name,
       phone: input.phone,
       address: input.address,
@@ -41,7 +44,12 @@ export async function createClientAccount(input: CreateClientInput) {
   if (input.name || input.phone || input.address) {
     await adminClient
       .from('profiles')
-      .update({ name: input.name, phone: input.phone, address: input.address })
+      .update({ business_id: business.id, name: input.name, phone: input.phone, address: input.address })
+      .eq('id', data.user.id)
+  } else {
+    await adminClient
+      .from('profiles')
+      .update({ business_id: business.id })
       .eq('id', data.user.id)
   }
 

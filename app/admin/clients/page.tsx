@@ -1,8 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireBusiness } from '@/lib/supabase/server'
 import Link from 'next/link'
 
 export default async function ClientsPage() {
+  const business = await requireBusiness()
   const supabase = await createClient()
   const adminClient = createAdminClient()
 
@@ -10,6 +12,7 @@ export default async function ClientsPage() {
     .from('profiles')
     .select('*, skulls(id, status)')
     .eq('role', 'client')
+    .eq('business_id', business.id)
     .order('created_at', { ascending: false })
 
   const { data: { users } } = await adminClient.auth.admin.listUsers()
