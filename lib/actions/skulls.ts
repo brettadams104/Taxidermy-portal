@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireBusiness } from '@/lib/supabase/server'
 import { getNextStatus, isFinished } from '@/lib/actions/skull-helpers'
 import { sendFinishedNotification } from '@/lib/notifications/send-finished'
 import { getBusinessStages, getFinalStage } from '@/lib/queries/stages'
@@ -19,7 +20,13 @@ export interface AddSkullInput {
 }
 
 export async function addSkull(input: AddSkullInput) {
+  const business = await requireBusiness()
   const supabase = await createClient()
+
+  // Get the first stage as initial status
+  const stages = await getBusinessStages(business.id)
+  const initialStatus = stages[0] || 'Received'
+
   const amountPaid = input.price != null && input.paymentOption === 'full_upfront'
     ? input.price
     : input.price != null && input.paymentOption === 'half_upfront'
@@ -27,6 +34,8 @@ export async function addSkull(input: AddSkullInput) {
     : 0
   const { error } = await supabase.from('skulls').insert({
     client_id: input.clientId,
+    business_id: business.id,
+    status: initialStatus,
     points: input.points,
     dnr_tag_number: input.dnrTagNumber,
     date_received: input.dateReceived,
