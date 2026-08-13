@@ -7,6 +7,7 @@ export async function generateInvitationLink(email?: string): Promise<string> {
   const business = await requireBusiness()
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://taxidermy-portal.vercel.app'
 
   if (!supabaseUrl || !serviceRoleKey) {
     throw new Error('Missing Supabase configuration')
@@ -25,7 +26,7 @@ export async function generateInvitationLink(email?: string): Promise<string> {
 
   if (error) throw new Error(error.message)
 
-  return `${supabaseUrl.replace('https://', '')}/accept-invite?token=${token}`
+  return `${appUrl}/accept-invite?token=${token}`
 }
 
 export async function validateInvitationToken(token: string) {
