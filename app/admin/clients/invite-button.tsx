@@ -12,20 +12,40 @@ export function InviteClientButton() {
   async function handleGenerateLink() {
     setLoading(true)
     try {
-      const response = await fetch('/admin/api/invite-client', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email || null }),
-      })
+      if (email) {
+        // Send email with link
+        const response = await fetch('/admin/api/send-invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        })
 
-      if (!response.ok) {
+        if (!response.ok) {
+          const data = await response.json()
+          throw new Error(data.error || 'Failed to send invitation')
+        }
+
         const data = await response.json()
-        throw new Error(data.error || 'Failed to generate link')
-      }
+        setLink(data.link)
+        setCopied(false)
+        alert(`Invitation sent to ${email}!`)
+      } else {
+        // Just generate link without email
+        const response = await fetch('/admin/api/invite-client', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: null }),
+        })
 
-      const data = await response.json()
-      setLink(data.link)
-      setCopied(false)
+        if (!response.ok) {
+          const data = await response.json()
+          throw new Error(data.error || 'Failed to generate link')
+        }
+
+        const data = await response.json()
+        setLink(data.link)
+        setCopied(false)
+      }
     } catch (err) {
       alert((err as Error).message)
     } finally {
