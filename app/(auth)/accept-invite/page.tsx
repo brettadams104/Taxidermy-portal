@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { LogoMark } from '@/components/logo'
 
 export default function AcceptInvitePage() {
   const searchParams = useSearchParams()
@@ -106,12 +105,9 @@ export default function AcceptInvitePage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0f1f35] p-4">
       <div className="w-full max-w-sm space-y-7">
-        <div className="text-center flex flex-col items-center gap-3">
-          <LogoMark size={56} variant="on-dark" />
-          <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Join GuideStride</h1>
-            <p className="text-slate-400 text-sm mt-1">Accept your invitation to collaborate</p>
-          </div>
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-white tracking-tight">Join Skull Studio</h1>
+          <p className="text-slate-400 text-sm mt-1">Accept your invitation to collaborate</p>
         </div>
 
         <form onSubmit={handleSignUp} className="space-y-4 bg-white/5 border border-white/10 rounded-2xl p-6">
