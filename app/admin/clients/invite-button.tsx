@@ -12,40 +12,20 @@ export function InviteClientButton() {
   async function handleGenerateLink() {
     setLoading(true)
     try {
-      if (email) {
-        // Send email with link
-        const response = await fetch('/admin/api/send-invite', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        })
+      const response = await fetch('/admin/api/invite-client', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email || null }),
+      })
 
-        if (!response.ok) {
-          const data = await response.json()
-          throw new Error(data.error || 'Failed to send invitation')
-        }
-
+      if (!response.ok) {
         const data = await response.json()
-        setLink(data.link)
-        setCopied(false)
-        alert(`Invitation sent to ${email}!`)
-      } else {
-        // Just generate link without email
-        const response = await fetch('/admin/api/invite-client', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: null }),
-        })
-
-        if (!response.ok) {
-          const data = await response.json()
-          throw new Error(data.error || 'Failed to generate link')
-        }
-
-        const data = await response.json()
-        setLink(data.link)
-        setCopied(false)
+        throw new Error(data.error || 'Failed to generate link')
       }
+
+      const data = await response.json()
+      setLink(data.link)
+      setCopied(false)
     } catch (err) {
       alert((err as Error).message)
     } finally {
@@ -66,7 +46,7 @@ export function InviteClientButton() {
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-xl p-6 max-w-md w-full space-y-4">
           <h2 className="text-lg font-bold">Client Invitation Link</h2>
-          <p className="text-sm text-gray-600">Share this link with your client. It expires in 7 days.</p>
+          <p className="text-sm text-gray-600">Share this link with your client. They can create an account anytime. It expires in 7 days.</p>
           <div className="bg-gray-50 border rounded-lg p-3 break-all text-sm font-mono">
             {link}
           </div>
@@ -95,9 +75,10 @@ export function InviteClientButton() {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-xl p-6 max-w-md w-full space-y-4">
-          <h2 className="text-lg font-bold">Invite a Client</h2>
+          <h2 className="text-lg font-bold">Generate Invite Link</h2>
+          <p className="text-sm text-gray-600">Create an invitation link for a client. Send it to them whenever you're ready.</p>
           <div>
-            <label className="block text-sm font-medium mb-1">Email (optional)</label>
+            <label className="block text-sm font-medium mb-1">Client Email (optional)</label>
             <input
               type="email"
               value={email}
@@ -105,7 +86,7 @@ export function InviteClientButton() {
               placeholder="client@example.com"
               className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
-            <p className="text-xs text-gray-500 mt-1">Email will be included in the invitation if provided</p>
+            <p className="text-xs text-gray-500 mt-1">Store for your records only</p>
           </div>
           <div className="flex gap-2">
             <button
@@ -132,7 +113,7 @@ export function InviteClientButton() {
       onClick={() => setOpen(true)}
       className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700"
     >
-      + Invite Client
+      + Generate Link
     </button>
   )
 }

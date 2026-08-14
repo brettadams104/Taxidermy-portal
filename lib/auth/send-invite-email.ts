@@ -2,6 +2,7 @@
 
 import { Resend } from 'resend'
 import { generateInvitationLink } from './invitations'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 export async function generateAndSendInvite(email: string) {
   if (!email) {
@@ -15,7 +16,7 @@ export async function generateAndSendInvite(email: string) {
 
   const resend = new Resend(apiKey)
 
-  // Generate the invitation link
+  // Generate the invitation link (WITHOUT sending email)
   const link = await generateInvitationLink(email)
 
   // Send email with the link
@@ -43,6 +44,19 @@ export async function generateAndSendInvite(email: string) {
         </div>
       `,
     })
+
+    // Mark invitation as sent
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (supabaseUrl && serviceRoleKey) {
+      const supabase = createSupabaseClient(supabaseUrl, serviceRoleKey)
+      await supabase
+        .from('invitations')
+        .update({ sent_at: new Date().toISOString() })
+        .match({ email })
+        .order('created_at', { ascending: false })
+        .limit(1)
+    }
 
     return { success: true, link }
   } catch (error) {
