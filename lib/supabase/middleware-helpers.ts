@@ -1,7 +1,7 @@
 import type { UserRole } from '@/lib/types'
 
 export function getRedirectPath(role: UserRole | null, pathname: string): string | null {
-  const publicPaths = ['/login', '/signup', '/reset-password']
+  const publicPaths = ['/login', '/signup', '/reset-password', '/accept-invite']
   const isPublicPath = publicPaths.includes(pathname) || pathname.startsWith('/auth')
 
   if (!role) {
