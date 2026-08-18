@@ -38,11 +38,6 @@ export async function createClientAccount(input: CreateClientInput) {
   const { data, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
     input.email,
     { data: { role: 'client' } }
-  // Email provided — invite via Supabase (gives portal access)
-  const adminClient = createAdminClient()
-  const { data, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
-    input.email,
-    { data: { role: 'client' } }
   )
   if (inviteError) throw new Error(inviteError.message)
 
