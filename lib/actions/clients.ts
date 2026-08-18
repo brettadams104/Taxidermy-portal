@@ -33,40 +33,29 @@ export async function createClientAccount(input: CreateClientInput) {
     return { userId: id }
   }
 
-  // Email provided — invite via Supabase (gives portal access)
+  // Email provided — create profile for portal access
+  // Then send invitation email separately to avoid auth issues
+  const clientId = randomUUID()
   const adminClient = createAdminClient()
-  let inviteResponse
-  try {
-    inviteResponse = await adminClient.auth.admin.inviteUserByEmail(
-      input.email,
-      { data: { role: 'client' } }
-    )
-  } catch (err) {
-    throw new Error(`Invite failed: ${err instanceof Error ? err.message : String(err)}`)
-  }
 
-  const { data, error: inviteError } = inviteResponse
+  // First, create the profile (same as no-email case, just with email)
+  const { error: profileError } = await supabase.from('profiles').insert({
+    id: clientId,
+    business_id: business.id,
+    name: input.name,
+    phone: input.phone,
+    address: input.address,
+    role: 'client',
+    email: input.email,
+  })
+  if (profileError) throw new Error(profileError.message)
 
-  if (inviteError) {
-    throw new Error(`Invite error: ${inviteError.message || JSON.stringify(inviteError)}`)
-  }
-
-  if (!data?.user?.id) {
-    throw new Error(`No user ID returned from invite: ${JSON.stringify(data)}`)
-  }
-
-  // Create profile for invited user
-  const { error: profileError } = await adminClient
-    .from('profiles')
-    .insert({
-      id: data.user.id,
-      business_id: business.id,
-      name: input.name,
-      phone: input.phone,
-      address: input.address,
-      role: 'client',
-    })
-  if (profileError) throw new Error(`Profile insert failed: ${profileError.message}`)
+  // Then invite the user via auth
+  const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
+    input.email,
+    { data: { role: 'client', profile_id: clientId } }
+  )
+  if (inviteError) throw new Error(inviteError.message)
   revalidatePath('/admin/clients')
   return { userId: data.user.id }
 }
