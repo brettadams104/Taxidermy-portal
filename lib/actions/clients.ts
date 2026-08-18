@@ -55,9 +55,15 @@ export async function createClientAccount(input: CreateClientInput) {
 
     // Step 2: Create admin client and send invitation
     console.log('[createClientAccount] Creating admin client')
-    const adminClient = createAdminClient()
 
-    console.log('[createClientAccount] Calling inviteUserByEmail for:', input.email)
+    // Check if service role key exists
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set in environment')
+    }
+
+    const adminClient = createAdminClient()
+    console.log('[createClientAccount] Admin client created successfully')
+    console.log('[createClientAccount] Attempting to send invitation for:', input.email)
     try {
       const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
         input.email,
@@ -66,14 +72,16 @@ export async function createClientAccount(input: CreateClientInput) {
 
       if (inviteError) {
         const errorMsg = inviteError.message || JSON.stringify(inviteError)
-        throw new Error(`Invite failed: ${errorMsg}`)
+        console.warn('[createClientAccount] Invitation failed (non-blocking):', errorMsg)
+        // Don't throw — profile was created successfully, invitation can be sent later via button
+      } else {
+        console.log('[createClientAccount] Invitation sent successfully')
       }
-
-      console.log('[createClientAccount] Invitation sent successfully')
     } catch (inviteException: any) {
       // If inviteUserByEmail throws (not returns error)
       const msg = inviteException?.message || String(inviteException)
-      throw new Error(`Invitation exception: ${msg}`)
+      console.warn('[createClientAccount] Invitation exception (non-blocking):', msg)
+      // Don't throw — profile was created successfully, invitation can be sent later via button
     }
 
     revalidatePath('/admin/clients')
