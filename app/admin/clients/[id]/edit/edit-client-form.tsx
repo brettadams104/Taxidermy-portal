@@ -48,6 +48,15 @@ export function EditClientForm({ clientId, profile }: Props) {
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-4 bg-white border rounded-xl p-4 shadow-sm">
+        <div>
+          <label className="block text-sm font-medium mb-1">Email (read-only)</label>
+          <input
+            type="email"
+            readOnly
+            defaultValue={profile.email ?? ''}
+            className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-600"
+          />
+        </div>
         {[
           { name: 'name', label: 'Name', type: 'text', value: profile.name },
           { name: 'phone', label: 'Phone', type: 'tel', value: profile.phone },
