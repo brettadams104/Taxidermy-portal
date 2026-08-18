@@ -41,17 +41,17 @@ export async function createClientAccount(input: CreateClientInput) {
   )
   if (inviteError) throw new Error(inviteError.message)
 
-  // Create profile for invited user
+  // Create or update profile for invited user
   const { error: profileError } = await adminClient
     .from('profiles')
-    .insert({
+    .upsert({
       id: data.user.id,
       business_id: business.id,
-      name: input.name,
-      phone: input.phone,
-      address: input.address,
+      name: input.name || '',
+      phone: input.phone || '',
+      address: input.address || '',
       role: 'client',
-    })
+    }, { onConflict: 'id' })
   if (profileError) throw new Error(profileError.message)
   revalidatePath('/admin/clients')
   return { userId: data.user.id }
