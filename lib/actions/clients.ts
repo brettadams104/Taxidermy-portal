@@ -35,11 +35,25 @@ export async function createClientAccount(input: CreateClientInput) {
 
   // Email provided — invite via Supabase (gives portal access)
   const adminClient = createAdminClient()
-  const { data, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
-    input.email,
-    { data: { role: 'client' } }
-  )
-  if (inviteError) throw new Error(inviteError.message)
+  let inviteResponse
+  try {
+    inviteResponse = await adminClient.auth.admin.inviteUserByEmail(
+      input.email,
+      { data: { role: 'client' } }
+    )
+  } catch (err) {
+    throw new Error(`Invite failed: ${err instanceof Error ? err.message : String(err)}`)
+  }
+
+  const { data, error: inviteError } = inviteResponse
+
+  if (inviteError) {
+    throw new Error(`Invite error: ${inviteError.message || JSON.stringify(inviteError)}`)
+  }
+
+  if (!data?.user?.id) {
+    throw new Error(`No user ID returned from invite: ${JSON.stringify(data)}`)
+  }
 
   // Create profile for invited user
   const { error: profileError } = await adminClient
@@ -52,7 +66,7 @@ export async function createClientAccount(input: CreateClientInput) {
       address: input.address,
       role: 'client',
     })
-  if (profileError) throw new Error(profileError.message)
+  if (profileError) throw new Error(`Profile insert failed: ${profileError.message}`)
   revalidatePath('/admin/clients')
   return { userId: data.user.id }
 }
