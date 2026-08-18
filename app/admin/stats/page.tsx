@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getBusinessStages, getFinalStage } from '@/lib/queries/stages'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { YearSelector } from './year-selector'
@@ -15,9 +16,25 @@ export default async function StatsPage({ searchParams }: Props) {
   const { year: yearParam } = await searchParams
   const supabase = await createClient()
 
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return <div>Not authenticated</div>
+  }
+
+  const { data: business } = await supabase
+    .from('businesses')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+
+  if (!business) {
+    return <div>Business not found</div>
+  }
+
   const { data: allSkulls } = await supabase
     .from('skulls')
     .select('date_received, price, amount_paid, status, created_at')
+    .eq('business_id', business.id)
     .order('date_received', { ascending: true })
 
   const availableYears = Array.from(
@@ -47,11 +64,14 @@ export default async function StatsPage({ searchParams }: Props) {
     }
   })
 
+  const stages = await getBusinessStages(business.id)
+  const finalStage = getFinalStage(stages)
+
   const totalBilled = yearSkulls.reduce((sum, s) => sum + (s.price ?? 0), 0)
   const totalCollected = yearSkulls.reduce((sum, s) => sum + s.amount_paid, 0)
   const totalOutstanding = Math.max(0, totalBilled - totalCollected)
   const totalDropOffs = yearSkulls.length
-  const finished = yearSkulls.filter(s => s.status === 'Picked Up').length
+  const finished = yearSkulls.filter(s => s.status === finalStage).length
 
   return (
     <div className="space-y-6">
