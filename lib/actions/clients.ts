@@ -41,10 +41,10 @@ export async function createClientAccount(input: CreateClientInput) {
   )
   if (inviteError) throw new Error(inviteError.message)
 
-  // Create or update profile for invited user
+  // Create profile for invited user
   const { error: profileError } = await adminClient
     .from('profiles')
-    .upsert({
+    .insert({
       id: data.user.id,
       business_id: business.id,
       name: input.name,
