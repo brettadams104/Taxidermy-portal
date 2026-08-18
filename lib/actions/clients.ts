@@ -14,50 +14,75 @@ export interface CreateClientInput {
 }
 
 export async function createClientAccount(input: CreateClientInput) {
-  const business = await requireBusiness()
-  const supabase = await createClient()
+  try {
+    const business = await requireBusiness()
+    const supabase = await createClient()
 
-  // No email — create a profile-only client (no portal access)
-  if (!input.email) {
-    const id = randomUUID()
-    const { error } = await supabase.from('profiles').insert({
-      id,
+    // No email — create a profile-only client (no portal access)
+    if (!input.email) {
+      const id = randomUUID()
+      const { error } = await supabase.from('profiles').insert({
+        id,
+        business_id: business.id,
+        name: input.name,
+        phone: input.phone,
+        address: input.address,
+        role: 'client',
+      })
+      if (error) throw new Error(`Profile insert failed: ${error.message}`)
+      revalidatePath('/admin/clients')
+      return { userId: id }
+    }
+
+    // Email provided — create profile for portal access, then send invitation
+    const clientId = randomUUID()
+
+    // Step 1: Create the profile
+    console.log('[createClientAccount] Creating profile for:', input.email)
+    const { error: profileError } = await supabase.from('profiles').insert({
+      id: clientId,
       business_id: business.id,
       name: input.name,
       phone: input.phone,
       address: input.address,
       role: 'client',
+      email: input.email,
     })
-    if (error) throw new Error(error.message)
+    if (profileError) {
+      throw new Error(`Profile insert failed: ${profileError.message}`)
+    }
+    console.log('[createClientAccount] Profile created:', clientId)
+
+    // Step 2: Create admin client and send invitation
+    console.log('[createClientAccount] Creating admin client')
+    const adminClient = createAdminClient()
+
+    console.log('[createClientAccount] Calling inviteUserByEmail for:', input.email)
+    try {
+      const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
+        input.email,
+        { data: { role: 'client', profile_id: clientId } }
+      )
+
+      if (inviteError) {
+        const errorMsg = inviteError.message || JSON.stringify(inviteError)
+        throw new Error(`Invite failed: ${errorMsg}`)
+      }
+
+      console.log('[createClientAccount] Invitation sent successfully')
+    } catch (inviteException: any) {
+      // If inviteUserByEmail throws (not returns error)
+      const msg = inviteException?.message || String(inviteException)
+      throw new Error(`Invitation exception: ${msg}`)
+    }
+
     revalidatePath('/admin/clients')
-    return { userId: id }
+    return { userId: clientId }
+  } catch (err: any) {
+    const message = err?.message || String(err)
+    console.error('[createClientAccount] Error:', message)
+    throw new Error(message)
   }
-
-  // Email provided — create profile for portal access
-  // Then send invitation email separately to avoid auth issues
-  const clientId = randomUUID()
-  const adminClient = createAdminClient()
-
-  // First, create the profile (same as no-email case, just with email)
-  const { error: profileError } = await supabase.from('profiles').insert({
-    id: clientId,
-    business_id: business.id,
-    name: input.name,
-    phone: input.phone,
-    address: input.address,
-    role: 'client',
-    email: input.email,
-  })
-  if (profileError) throw new Error(profileError.message)
-
-  // Then invite the user via auth
-  const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
-    input.email,
-    { data: { role: 'client', profile_id: clientId } }
-  )
-  if (inviteError) throw new Error(inviteError.message)
-  revalidatePath('/admin/clients')
-  return { userId: clientId }
 }
 
 export async function deleteClient(clientId: string) {
