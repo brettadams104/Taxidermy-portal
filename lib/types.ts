@@ -21,6 +21,7 @@ export interface Profile {
   name: string | null
   phone: string | null
   address: string | null
+  email: string | null
   created_at: string
 }
 
