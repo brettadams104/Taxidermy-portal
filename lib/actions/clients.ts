@@ -47,11 +47,11 @@ export async function createClientAccount(input: CreateClientInput) {
     .upsert({
       id: data.user.id,
       business_id: business.id,
-      name: input.name || '',
-      phone: input.phone || '',
-      address: input.address || '',
+      name: input.name,
+      phone: input.phone,
+      address: input.address,
       role: 'client',
-    }, { onConflict: 'id' })
+    })
   if (profileError) throw new Error(profileError.message)
   revalidatePath('/admin/clients')
   return { userId: data.user.id }
