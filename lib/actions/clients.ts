@@ -51,13 +51,13 @@ export async function createClientAccount(input: CreateClientInput) {
   if (profileError) throw new Error(profileError.message)
 
   // Then invite the user via auth
-  const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
+  const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
     input.email,
     { data: { role: 'client', profile_id: clientId } }
   )
   if (inviteError) throw new Error(inviteError.message)
   revalidatePath('/admin/clients')
-  return { userId: data.user.id }
+  return { userId: clientId }
 }
 
 export async function deleteClient(clientId: string) {
