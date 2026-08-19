@@ -63,6 +63,13 @@ export function AdminNav({ signOut }: Props) {
           >
             Templates
           </Link>
+          <Link
+            href="/admin/settings/account"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-3 text-sm hover:bg-gray-50 border-b"
+          >
+            Account
+          </Link>
           <form action={signOut}>
             <button type="submit" className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-gray-50">
               Sign Out
