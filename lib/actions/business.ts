@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server';
 import { requireBusiness } from '@/lib/supabase/server';
 import type { Business } from '@/lib/types/business';
@@ -66,6 +67,30 @@ export async function updateBusinessStages(
  * @returns Object containing business data and hasInProgressSkulls flag
  * @throws Error if no business is found or database operations fail
  */
+export async function updateBusinessName(businessName: string): Promise<void> {
+  if (!businessName || businessName.trim().length === 0) {
+    throw new Error('Business name cannot be empty')
+  }
+
+  const supabase = await createClient()
+  const business = await requireBusiness()
+
+  const { error } = await supabase
+    .from('businesses')
+    .update({
+      business_name: businessName.trim(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', business.id)
+
+  if (error) {
+    throw new Error(`Failed to update business name: ${error.message}`)
+  }
+
+  revalidatePath('/admin/settings/account')
+  revalidatePath('/admin/dashboard')
+}
+
 export async function getBusinessSettings(): Promise<{
   business: Business;
   hasInProgressSkulls: boolean;
