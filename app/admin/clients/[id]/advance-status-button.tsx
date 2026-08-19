@@ -2,18 +2,22 @@
 
 import { useState } from 'react'
 import { advanceSkullStatus } from '@/lib/actions/skulls'
-import { getNextStatus } from '@/lib/actions/skull-helpers'
 import type { SkullStatus } from '@/lib/types'
 
 interface Props {
   skullId: string
   currentStatus: SkullStatus
+  stages: string[]
 }
 
-export function AdvanceStatusButton({ skullId, currentStatus }: Props) {
+export function AdvanceStatusButton({ skullId, currentStatus, stages }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const nextStatus = getNextStatus(currentStatus)
+
+  const currentIndex = stages.indexOf(currentStatus)
+  const nextStatus = currentIndex >= 0 && currentIndex < stages.length - 1
+    ? stages[currentIndex + 1]
+    : null
 
   if (!nextStatus) return null
 

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { requireBusiness } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { SkullCard } from '@/components/skull-card'
@@ -9,11 +10,13 @@ import type { SkullStatus } from '@/lib/types'
 export default async function SkullDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
+  const business = await requireBusiness()
 
   const { data: skull } = await supabase.from('skulls').select('*').eq('id', id).single()
   if (!skull) notFound()
 
   const { data: profile } = await supabase.from('profiles').select('name').eq('id', skull.client_id).single()
+  const stages = business.stages || []
 
   return (
     <div className="space-y-4">
@@ -24,7 +27,7 @@ export default async function SkullDetailPage({ params }: { params: Promise<{ id
       <SkullCard skull={skull} />
 
       <div className="flex gap-2">
-        <AdvanceStatusButton skullId={skull.id} currentStatus={skull.status as SkullStatus} />
+        <AdvanceStatusButton skullId={skull.id} currentStatus={skull.status as SkullStatus} stages={stages} />
         <Link
           href={`/admin/skulls/${id}/edit`}
           className="shrink-0 border rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-50"

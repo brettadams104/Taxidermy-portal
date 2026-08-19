@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireBusiness } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { SkullCard } from '@/components/skull-card'
@@ -11,9 +12,12 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const { id } = await params
   const supabase = await createClient()
   const adminClient = createAdminClient()
+  const business = await requireBusiness()
 
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', id).single()
   if (!profile) notFound()
+
+  const stages = business.stages || []
 
   const { data: { user } } = await adminClient.auth.admin.getUserById(id)
   const { data: skulls } = await supabase
@@ -59,7 +63,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             <SkullCard skull={skull} />
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <StatusDropdown skullId={skull.id} currentStatus={skull.status as SkullStatus} />
-              <AdvanceStatusButton skullId={skull.id} currentStatus={skull.status as SkullStatus} />
+              <AdvanceStatusButton skullId={skull.id} currentStatus={skull.status as SkullStatus} stages={stages} />
               <Link
                 href={`/admin/skulls/${skull.id}/edit`}
                 className="text-sm border rounded-lg px-4 py-2 hover:bg-gray-50 text-center"

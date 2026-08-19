@@ -136,7 +136,7 @@ export default async function AdminDashboardPage() {
                 </div>
                 <SkullCard skull={skull} />
                 <div className="flex gap-2 mt-4">
-                  <AdvanceStatusButton skullId={project.id} currentStatus={project.status as SkullStatus} />
+                  <AdvanceStatusButton skullId={project.id} currentStatus={project.status as SkullStatus} stages={stages} />
                   <Link
                     href={`/admin/skulls/${project.id}/edit`}
                     className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
