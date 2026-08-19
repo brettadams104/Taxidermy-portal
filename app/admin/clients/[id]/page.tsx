@@ -61,6 +61,29 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         {skulls?.map(skull => (
           <div key={skull.id} className="space-y-2">
             <SkullCard skull={skull} />
+
+            {/* Progress Bar */}
+            {stages.length > 0 && (
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <p className="text-xs font-semibold text-gray-700">
+                    {skull.status}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    {stages.indexOf(skull.status) + 1} of {stages.length}
+                  </p>
+                </div>
+                <div className="w-full h-2 rounded-full bg-gray-200">
+                  <div
+                    className="h-2 rounded-full transition-all bg-blue-600"
+                    style={{
+                      width: `${((stages.indexOf(skull.status) + 1) / stages.length) * 100}%`
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <StatusDropdown skullId={skull.id} currentStatus={skull.status as SkullStatus} stages={stages} />
               <AdvanceStatusButton skullId={skull.id} currentStatus={skull.status as SkullStatus} stages={stages} />
