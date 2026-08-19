@@ -177,41 +177,43 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Completed Projects (Final Stage) */}
-      <div>
-        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--primary)' }}>{finalStage}</h2>
-        {!completedSkulls?.length && (
-          <div className="rounded-xl p-12 text-center border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
-            <p style={{ color: 'var(--text-muted)' }}>No projects in {finalStage} stage</p>
+      {/* Final Stage Projects - Hidden if finalStage is "Picked Up" */}
+      {finalStage !== 'Picked Up' && (
+        <div>
+          <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--primary)' }}>{finalStage}</h2>
+          {!completedSkulls?.length && (
+            <div className="rounded-xl p-12 text-center border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+              <p style={{ color: 'var(--text-muted)' }}>No projects in {finalStage} stage</p>
+            </div>
+          )}
+          <div className="space-y-4">
+            {completedSkulls?.map(skull => {
+              // Find the client profile for this skull
+              const skullWithProfile = activeProjects.find(s => s.id === skull.id) ||
+                                      (skull as any)
+              const profile = (skullWithProfile as any)?.profiles as { name: string | null } | null
+              return (
+                <div key={skull.id} className="rounded-xl p-6 border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+                  <div className="mb-4">
+                    <p className="font-bold text-lg" style={{ color: 'var(--text)' }}>
+                      {profile?.name ?? 'Unnamed Client'} - {finalStage}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Link
+                      href={`/admin/skulls/${skull.id}`}
+                      className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                      style={{ backgroundColor: 'var(--background)', color: 'var(--text)' }}
+                    >
+                      View Details
+                    </Link>
+                  </div>
+                </div>
+              )
+            })}
           </div>
-        )}
-        <div className="space-y-4">
-          {completedSkulls?.map(skull => {
-            // Find the client profile for this skull
-            const skullWithProfile = activeProjects.find(s => s.id === skull.id) ||
-                                    (skull as any)
-            const profile = (skullWithProfile as any)?.profiles as { name: string | null } | null
-            return (
-              <div key={skull.id} className="rounded-xl p-6 border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
-                <div className="mb-4">
-                  <p className="font-bold text-lg" style={{ color: 'var(--text)' }}>
-                    {profile?.name ?? 'Unnamed Client'} - {finalStage}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Link
-                    href={`/admin/skulls/${skull.id}`}
-                    className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-                    style={{ backgroundColor: 'var(--background)', color: 'var(--text)' }}
-                  >
-                    View Details
-                  </Link>
-                </div>
-              </div>
-            )
-          })}
         </div>
-      </div>
+      )}
     </div>
   )
 }

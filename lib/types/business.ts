@@ -13,7 +13,7 @@ export interface CreateBusinessInput {
   stages?: string[];
 }
 
-export const DEFAULT_STAGES = ["Received", "In Progress", "Completed"];
+export const DEFAULT_STAGES = ["Received", "In Progress", "Ready for Pickup", "Picked Up"];
 
 /**
  * Get the index of the final stage in a workflow.
