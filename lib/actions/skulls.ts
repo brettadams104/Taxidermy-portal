@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireBusiness } from '@/lib/supabase/server'
-import { getNextStatus, isFinished } from '@/lib/actions/skull-helpers'
+import { isFinished } from '@/lib/actions/skull-helpers'
 import { sendFinishedNotification } from '@/lib/notifications/send-finished'
 import { getBusinessStages, getFinalStage } from '@/lib/queries/stages'
 import type { PaymentOption } from '@/lib/types'
@@ -97,8 +97,11 @@ export async function advanceSkullStatus(skullId: string) {
   const stages = await getBusinessStages(skull.business_id)
   const finalStage = getFinalStage(stages)
 
-  const nextStatus = getNextStatus(skull.status as any)
-  if (!nextStatus) throw new Error('Already at final status')
+  // Find next status based on business stages, not hardcoded list
+  const currentIndex = stages.indexOf(skull.status)
+  if (currentIndex < 0) throw new Error(`Current status "${skull.status}" not found in business stages`)
+  if (currentIndex >= stages.length - 1) throw new Error('Already at final status')
+  const nextStatus = stages[currentIndex + 1]
 
   // Auto-transition to final stage (no intermediate stages after final)
   // This is now dynamic based on business configuration
