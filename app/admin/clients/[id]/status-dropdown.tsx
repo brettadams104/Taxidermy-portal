@@ -2,15 +2,15 @@
 
 import { useState } from 'react'
 import { updateSkullStatusDirect } from '@/lib/actions/skulls'
-import { SKULL_STATUSES } from '@/lib/constants'
 import type { SkullStatus } from '@/lib/types'
 
 interface Props {
   skullId: string
   currentStatus: SkullStatus
+  stages: string[]
 }
 
-export function StatusDropdown({ skullId, currentStatus }: Props) {
+export function StatusDropdown({ skullId, currentStatus, stages }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState(currentStatus)
@@ -37,7 +37,7 @@ export function StatusDropdown({ skullId, currentStatus }: Props) {
         disabled={loading}
         className="w-full px-3 py-2 border rounded-lg text-sm font-medium disabled:opacity-50 cursor-pointer"
       >
-        {SKULL_STATUSES.map((s) => (
+        {stages.map((s) => (
           <option key={s} value={s}>
             {s}
           </option>
