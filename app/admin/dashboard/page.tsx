@@ -135,6 +135,30 @@ export default async function AdminDashboardPage() {
                   <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Mount preparation in progress</p>
                 </div>
                 <SkullCard skull={skull} />
+
+                {/* Progress Bar */}
+                {stages.length > 0 && (
+                  <div className="mt-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <p className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>
+                        {project.status}
+                      </p>
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {stages.indexOf(project.status as string) + 1} of {stages.length}
+                      </p>
+                    </div>
+                    <div className="w-full h-2 rounded-full" style={{ backgroundColor: 'var(--border)' }}>
+                      <div
+                        className="h-2 rounded-full transition-all"
+                        style={{
+                          width: `${((stages.indexOf(project.status as string) + 1) / stages.length) * 100}%`,
+                          backgroundColor: 'var(--accent)'
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-2 mt-4">
                   <AdvanceStatusButton skullId={project.id} currentStatus={project.status as SkullStatus} stages={stages} />
                   <Link
