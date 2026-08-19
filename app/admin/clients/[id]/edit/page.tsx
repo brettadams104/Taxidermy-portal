@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import Link from 'next/link'
 import { EditClientForm } from './edit-client-form'
 
 export default async function EditClientPage({ params }: { params: Promise<{ id: string }> }) {
@@ -13,6 +14,9 @@ export default async function EditClientPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="space-y-4">
+      <Link href={`/admin/clients/${id}`} className="text-blue-600 hover:underline text-sm">
+        ← Back
+      </Link>
       <h1 className="text-2xl font-bold">Edit Client</h1>
       <EditClientForm clientId={id} profile={profile} />
     </div>
