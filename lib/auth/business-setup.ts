@@ -33,6 +33,12 @@ export async function createBusinessForUser(
 
   const businessNameToUse = businessName || 'My Taxidermy Studio'
 
+  // Generate human-readable identifier: "business_name-YYYYMMDD-XXXXX"
+  // Format: lowercase business name + date + random suffix
+  const timestamp = new Date().toISOString().split('T')[0].replace(/-/g, '')
+  const randomSuffix = Math.random().toString(36).substring(2, 7).toUpperCase()
+  const businessIdentifier = `${businessNameToUse.toLowerCase().replace(/\s+/g, '_').substring(0, 20)}-${timestamp}-${randomSuffix}`
+
   // Create the business record
   const { data: business, error: businessError } = await supabase
     .from('businesses')
@@ -40,6 +46,7 @@ export async function createBusinessForUser(
       {
         owner_id: userId,
         business_name: businessNameToUse,
+        business_identifier: businessIdentifier,
         stages: DEFAULT_STAGES,
       },
     ])

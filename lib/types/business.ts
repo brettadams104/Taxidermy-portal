@@ -3,6 +3,7 @@ export interface Business {
   id: string;
   owner_id: string;
   business_name: string | null;
+  business_identifier: string;
   stages: string[];
   created_at: string;
   updated_at: string;
