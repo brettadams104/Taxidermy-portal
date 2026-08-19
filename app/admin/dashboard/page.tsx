@@ -71,13 +71,6 @@ export default async function AdminDashboardPage() {
           </div>
         </Link>
 
-        {/* In Progress */}
-        <div className="rounded-xl p-6 border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
-          <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>In Progress</p>
-          <p className="text-4xl font-black mb-2" style={{ color: 'var(--accent)' }}>{inProgressCount}</p>
-          <div className="h-1 rounded-full" style={{ backgroundColor: 'var(--accent)' }}></div>
-        </div>
-
         {/* Completed Skulls */}
         <Link href="/admin/skulls/finished" className="group">
           <div className="rounded-xl p-6 h-full border-2 hover:shadow-xl transition-all" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
@@ -159,18 +152,20 @@ export default async function AdminDashboardPage() {
                   </div>
                 )}
 
-                <div className="flex gap-2 mt-4">
-                  <AdvanceStatusButton skullId={project.id} currentStatus={project.status as SkullStatus} stages={stages} />
+                <div className="grid grid-cols-3 gap-2 mt-4">
+                  <div className="col-span-1">
+                    <AdvanceStatusButton skullId={project.id} currentStatus={project.status as SkullStatus} stages={stages} />
+                  </div>
                   <Link
                     href={`/admin/skulls/${project.id}/edit`}
-                    className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                    className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors text-center"
                     style={{ backgroundColor: 'var(--background)', color: 'var(--text)' }}
                   >
                     Edit
                   </Link>
                   <Link
                     href={`/admin/skulls/${project.id}`}
-                    className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                    className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors text-center"
                     style={{ backgroundColor: 'var(--background)', color: 'var(--text)' }}
                   >
                     Manage
