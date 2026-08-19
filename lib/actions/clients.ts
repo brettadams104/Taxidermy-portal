@@ -16,6 +16,12 @@ export interface CreateClientInput {
 export async function createClientAccount(input: CreateClientInput) {
   try {
     const business = await requireBusiness()
+
+    // CRITICAL: Ensure business_id is valid and non-null
+    if (!business.id || typeof business.id !== 'string') {
+      throw new Error('Invalid business context: business_id is required')
+    }
+
     const supabase = await createClient()
 
     // No email — create a profile-only client (no portal access)

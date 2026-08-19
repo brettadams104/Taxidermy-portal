@@ -8,11 +8,14 @@ export default async function ClientsPage() {
   const supabase = await createClient()
   const adminClient = createAdminClient()
 
+  // CRITICAL: Always filter by business_id to prevent data leakage from orphaned records
+  // Orphaned profiles (with NULL or missing business_id) should never appear here
   const { data: profiles } = await supabase
     .from('profiles')
     .select('*, skulls(id, status)')
     .eq('role', 'client')
     .eq('business_id', business.id)
+    .not('business_id', 'is', null)
     .order('created_at', { ascending: false })
 
   const { data: { users } } = await adminClient.auth.admin.listUsers()
