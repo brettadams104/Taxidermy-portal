@@ -20,7 +20,11 @@ export default async function AdminDashboardPage() {
   const allSkulls = await getAllSkullsByBusiness(business.id)
 
   // Fetch active projects (not in final stage)
-  const activeProjects = await getSkullsInProgressWithClients(business.id, finalStage)
+  const allNonFinalSkulls = await getSkullsInProgressWithClients(business.id, finalStage)
+
+  // Separate Ready for Pickup from other active projects
+  const readyForPickupSkulls = allNonFinalSkulls.filter(s => s.status === 'Ready for Pickup')
+  const activeProjects = allNonFinalSkulls.filter(s => s.status !== 'Ready for Pickup')
 
   // Fetch skulls in final stage (completed)
   const completedSkulls = await getSkullsByStatus(finalStage, business.id)
@@ -165,6 +169,51 @@ export default async function AdminDashboardPage() {
                   </Link>
                   <Link
                     href={`/admin/skulls/${project.id}`}
+                    className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors text-center"
+                    style={{ backgroundColor: 'var(--background)', color: 'var(--text)' }}
+                  >
+                    Manage
+                  </Link>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Ready for Pickup */}
+      <div>
+        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--primary)' }}>Ready for Pickup</h2>
+        {!readyForPickupSkulls?.length && (
+          <div className="rounded-xl p-12 text-center border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+            <p style={{ color: 'var(--text-muted)' }}>No skulls ready for pickup</p>
+          </div>
+        )}
+        <div className="space-y-4">
+          {readyForPickupSkulls?.map(skull => {
+            const profile = skull.profiles as { name: string | null } | null
+            return (
+              <div key={skull.id} className="rounded-xl p-6 border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+                <div className="mb-4">
+                  <p className="font-bold text-lg" style={{ color: 'var(--text)' }}>
+                    {profile?.name ?? 'Unnamed Client'}
+                  </p>
+                  <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Ready for customer pickup</p>
+                </div>
+                <SkullCard skull={skull as unknown as Skull} />
+                <div className="grid grid-cols-3 gap-2 mt-4">
+                  <div className="col-span-1">
+                    <AdvanceStatusButton skullId={skull.id} currentStatus={skull.status as SkullStatus} stages={stages} />
+                  </div>
+                  <Link
+                    href={`/admin/skulls/${skull.id}/edit`}
+                    className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors text-center"
+                    style={{ backgroundColor: 'var(--background)', color: 'var(--text)' }}
+                  >
+                    Edit
+                  </Link>
+                  <Link
+                    href={`/admin/skulls/${skull.id}`}
                     className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors text-center"
                     style={{ backgroundColor: 'var(--background)', color: 'var(--text)' }}
                   >
