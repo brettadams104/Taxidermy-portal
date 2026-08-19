@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation'
 import { SkullCard } from '@/components/skull-card'
 import { AdvanceStatusButton } from './advance-status-button'
 import { StatusDropdown } from './status-dropdown'
+import { LogPaymentForm } from '@/app/admin/skulls/[id]/log-payment-form'
 import type { SkullStatus } from '@/lib/types'
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -81,6 +82,27 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                     }}
                   />
                 </div>
+              </div>
+            )}
+
+            {/* Payment Section */}
+            {skull.price != null && (
+              <div className="border rounded-lg p-3 bg-gray-50 space-y-2">
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Price</span>
+                    <span className="font-medium">${skull.price.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Paid</span>
+                    <span className="font-medium">${(skull.amount_paid ?? 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold border-t pt-2">
+                    <span>Balance</span>
+                    <span>${Math.max(0, skull.price - (skull.amount_paid ?? 0)).toFixed(2)}</span>
+                  </div>
+                </div>
+                <LogPaymentForm skullId={skull.id} />
               </div>
             )}
 
