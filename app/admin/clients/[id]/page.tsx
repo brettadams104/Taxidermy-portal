@@ -7,6 +7,7 @@ import { SkullCard } from '@/components/skull-card'
 import { AdvanceStatusButton } from './advance-status-button'
 import { StatusDropdown } from './status-dropdown'
 import { LogPaymentForm } from '@/app/admin/skulls/[id]/log-payment-form'
+import { InviteButton } from './invite-button'
 import type { SkullStatus } from '@/lib/types'
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -53,6 +54,14 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </Link>
         </div>
       </div>
+
+      {/* Portal Access Section */}
+      {profile.email && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <p className="text-sm font-medium text-blue-900 mb-3">Portal Access</p>
+          <InviteButton clientId={id} clientEmail={profile.email} />
+        </div>
+      )}
 
       {!skulls?.length && (
         <p className="text-gray-700 text-center py-8">No skulls yet.</p>

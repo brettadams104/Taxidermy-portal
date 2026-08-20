@@ -40,11 +40,10 @@ export async function createClientAccount(input: CreateClientInput) {
       return { userId: id }
     }
 
-    // Email provided — create profile for portal access, then send invitation
+    // Email provided — create profile only (no auto-invitation)
+    // Admin can send invitation manually via "Invite to Portal" button
     const clientId = randomUUID()
 
-    // Step 1: Create the profile
-    console.log('[createClientAccount] Creating profile for:', input.email)
     const { error: profileError } = await supabase.from('profiles').insert({
       id: clientId,
       business_id: business.id,
@@ -57,38 +56,6 @@ export async function createClientAccount(input: CreateClientInput) {
     if (profileError) {
       throw new Error(`Profile insert failed: ${profileError.message}`)
     }
-    console.log('[createClientAccount] Profile created:', clientId)
-
-    // Step 2: Create admin client and send invitation
-    console.log('[createClientAccount] Creating admin client')
-
-    // Check if service role key exists
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set in environment')
-    }
-
-    const adminClient = createAdminClient()
-    console.log('[createClientAccount] Admin client created successfully')
-    console.log('[createClientAccount] Attempting to send invitation for:', input.email)
-    try {
-      const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
-        input.email,
-        { data: { role: 'client', profile_id: clientId } }
-      )
-
-      if (inviteError) {
-        const errorMsg = inviteError.message || JSON.stringify(inviteError)
-        console.warn('[createClientAccount] Invitation failed (non-blocking):', errorMsg)
-        // Don't throw — profile was created successfully, invitation can be sent later via button
-      } else {
-        console.log('[createClientAccount] Invitation sent successfully')
-      }
-    } catch (inviteException: any) {
-      // If inviteUserByEmail throws (not returns error)
-      const msg = inviteException?.message || String(inviteException)
-      console.warn('[createClientAccount] Invitation exception (non-blocking):', msg)
-      // Don't throw — profile was created successfully, invitation can be sent later via button
-    }
 
     revalidatePath('/admin/clients')
     return { userId: clientId }
@@ -97,6 +64,27 @@ export async function createClientAccount(input: CreateClientInput) {
     console.error('[createClientAccount] Error:', message)
     throw new Error(message)
   }
+}
+
+export async function inviteClientToPortal(clientId: string, clientEmail: string): Promise<void> {
+  const adminClient = createAdminClient()
+
+  // Send invitation email
+  const { error } = await adminClient.auth.admin.inviteUserByEmail(
+    clientEmail,
+    {
+      data: {
+        role: 'client',
+        profile_id: clientId
+      }
+    }
+  )
+
+  if (error) {
+    throw new Error(`Failed to send invitation: ${error.message}`)
+  }
+
+  revalidatePath('/admin/clients')
 }
 
 export async function deleteClient(clientId: string) {
