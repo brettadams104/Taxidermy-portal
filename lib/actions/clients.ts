@@ -67,22 +67,41 @@ export async function createClientAccount(input: CreateClientInput) {
 }
 
 export async function inviteClientToPortal(clientId: string, clientEmail: string): Promise<void> {
-  const adminClient = createAdminClient()
+  const supabase = await createClient()
 
-  // Send invitation email
-  const { error } = await adminClient.auth.admin.inviteUserByEmail(
-    clientEmail,
-    {
-      data: {
-        role: 'client',
-        profile_id: clientId
-      }
-    }
-  )
+  // Generate secure random token
+  const token = require('crypto').randomBytes(32).toString('hex')
 
-  if (error) {
-    throw new Error(`Failed to send invitation: ${error.message}`)
+  // Get the client's business_id
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('business_id')
+    .eq('id', clientId)
+    .single()
+
+  if (profileError || !profile) {
+    throw new Error('Client not found')
   }
+
+  // Store invitation
+  const { error: inviteError } = await supabase
+    .from('invitations')
+    .insert({
+      token,
+      email: clientEmail,
+      client_id: clientId,
+      business_id: profile.business_id,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+    })
+
+  if (inviteError) {
+    throw new Error(`Failed to create invitation: ${inviteError.message}`)
+  }
+
+  // Note: Email sending would happen here
+  // For now, just log the invite link for testing
+  const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/auth/accept-invite?token=${token}`
+  console.log(`Invitation link: ${inviteLink}`)
 
   revalidatePath('/admin/clients')
 }
