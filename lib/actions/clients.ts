@@ -102,13 +102,14 @@ export async function deleteClient(clientId: string) {
 
 export async function updateClientProfile(
   clientId: string,
-  updates: { name?: string; phone?: string; address?: string }
+  updates: { name?: string; phone?: string; address?: string; email?: string }
 ) {
   const supabase = await createClient()
   const { error } = await supabase.from('profiles').update({
     name: updates.name,
     phone: updates.phone,
     address: updates.address,
+    email: updates.email,
   }).eq('id', clientId)
   if (error) throw new Error(error.message)
   revalidatePath(`/admin/clients/${clientId}`)

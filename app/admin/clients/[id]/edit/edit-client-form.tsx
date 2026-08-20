@@ -27,6 +27,7 @@ export function EditClientForm({ clientId, profile }: Props) {
         name: (form.get('name') as string) || undefined,
         phone: (form.get('phone') as string) || undefined,
         address: (form.get('address') as string) || undefined,
+        email: (form.get('email') as string) || undefined,
       })
       router.push(`/admin/clients/${clientId}`)
     } catch (err) {
@@ -49,12 +50,12 @@ export function EditClientForm({ clientId, profile }: Props) {
     <>
       <form onSubmit={handleSubmit} className="space-y-4 bg-white border rounded-xl p-4 shadow-sm">
         <div>
-          <label className="block text-sm font-medium mb-1">Email (read-only)</label>
+          <label className="block text-sm font-medium mb-1">Email (optional)</label>
           <input
+            name="email"
             type="email"
-            readOnly
             defaultValue={profile.email ?? ''}
-            className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-600"
+            className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         {[
