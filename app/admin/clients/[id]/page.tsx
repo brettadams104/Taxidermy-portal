@@ -108,7 +108,13 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <StatusDropdown skullId={skull.id} currentStatus={skull.status as SkullStatus} stages={stages} />
-              <AdvanceStatusButton skullId={skull.id} currentStatus={skull.status as SkullStatus} stages={stages} />
+              <AdvanceStatusButton
+                skullId={skull.id}
+                currentStatus={skull.status as SkullStatus}
+                stages={stages}
+                price={skull.price}
+                amountPaid={skull.amount_paid}
+              />
               <Link
                 href={`/admin/skulls/${skull.id}/edit`}
                 className="text-sm border rounded-lg px-4 py-2 hover:bg-gray-50 text-center"

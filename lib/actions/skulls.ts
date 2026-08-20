@@ -80,6 +80,19 @@ export async function updateSkull(skullId: string, input: {
   if (skull?.client_id) revalidatePath(`/admin/clients/${skull.client_id}`)
 }
 
+export async function completeSkullPayment(skullId: string, finalAmount: number): Promise<void> {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('skulls')
+    .update({ amount_paid: finalAmount })
+    .eq('id', skullId)
+
+  if (error) throw new Error(`Failed to mark payment as complete: ${error.message}`)
+
+  revalidatePath('/admin/clients')
+}
+
 export async function advanceSkullStatus(skullId: string) {
   const supabase = await createClient()
   const adminClient = createAdminClient()

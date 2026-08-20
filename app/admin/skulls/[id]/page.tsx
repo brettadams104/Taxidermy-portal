@@ -27,7 +27,13 @@ export default async function SkullDetailPage({ params }: { params: Promise<{ id
       <SkullCard skull={skull} />
 
       <div className="flex gap-2">
-        <AdvanceStatusButton skullId={skull.id} currentStatus={skull.status as SkullStatus} stages={stages} />
+        <AdvanceStatusButton
+          skullId={skull.id}
+          currentStatus={skull.status as SkullStatus}
+          stages={stages}
+          price={skull.price}
+          amountPaid={skull.amount_paid}
+        />
         <Link
           href={`/admin/skulls/${id}/edit`}
           className="shrink-0 border rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-50"

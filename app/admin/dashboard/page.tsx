@@ -158,7 +158,13 @@ export default async function AdminDashboardPage() {
 
                 <div className="grid grid-cols-3 gap-2 mt-4">
                   <div className="col-span-1">
-                    <AdvanceStatusButton skullId={project.id} currentStatus={project.status as SkullStatus} stages={stages} />
+                    <AdvanceStatusButton
+                      skullId={project.id}
+                      currentStatus={project.status as SkullStatus}
+                      stages={stages}
+                      price={project.price}
+                      amountPaid={project.amount_paid}
+                    />
                   </div>
                   <Link
                     href={`/admin/skulls/${project.id}/edit`}
@@ -203,7 +209,13 @@ export default async function AdminDashboardPage() {
                 <SkullCard skull={skull as unknown as Skull} />
                 <div className="grid grid-cols-3 gap-2 mt-4">
                   <div className="col-span-1">
-                    <AdvanceStatusButton skullId={skull.id} currentStatus={skull.status as SkullStatus} stages={stages} />
+                    <AdvanceStatusButton
+                      skullId={skull.id}
+                      currentStatus={skull.status as SkullStatus}
+                      stages={stages}
+                      price={skull.price}
+                      amountPaid={skull.amount_paid}
+                    />
                   </div>
                   <Link
                     href={`/admin/skulls/${skull.id}/edit`}
