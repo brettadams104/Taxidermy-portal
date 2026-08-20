@@ -23,7 +23,7 @@ export function InviteButton({ clientId, clientEmail }: Props) {
     setSuccess(false)
 
     try {
-      await inviteClientToPortal(clientId, clientEmail)
+      await inviteClientToPortal(clientId, clientEmail as string)
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
     } catch (err) {
