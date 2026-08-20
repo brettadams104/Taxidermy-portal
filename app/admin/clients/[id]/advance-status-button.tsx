@@ -23,7 +23,7 @@ export function AdvanceStatusButton({ skullId, currentStatus, stages, price, amo
     : null
 
   const isFinalStage = nextStatus === stages[stages.length - 1]
-  const hasOutstandingBalance = price && amountPaid ? price > amountPaid : false
+  const hasPrice = price != null && price > 0
 
   if (!nextStatus) return null
 
@@ -44,7 +44,8 @@ export function AdvanceStatusButton({ skullId, currentStatus, stages, price, amo
   }
 
   async function handleClick() {
-    if (isFinalStage && hasOutstandingBalance) {
+    // Show payment modal when advancing to final stage if there's a price
+    if (isFinalStage && hasPrice) {
       setShowPaymentModal(true)
     } else {
       handleAdvance()
