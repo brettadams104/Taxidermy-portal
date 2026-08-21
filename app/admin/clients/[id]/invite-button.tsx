@@ -34,19 +34,19 @@ export function InviteButton({ clientId, clientEmail }: Props) {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <button
         onClick={handleInvite}
         disabled={loading}
-        className="w-full bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+        className="w-full bg-blue-600 text-white rounded-lg py-3 text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all shadow-sm hover:shadow-md"
       >
         {loading ? 'Sending...' : '📧 Invite to Portal'}
       </button>
       {error && (
-        <p className="text-red-600 text-xs">{error}</p>
+        <p className="text-red-600 text-sm font-medium">{error}</p>
       )}
       {success && (
-        <p className="text-green-600 text-xs">Invitation sent to {clientEmail}</p>
+        <p className="text-green-600 text-sm font-medium">✓ Invitation sent to {clientEmail}</p>
       )}
     </div>
   )

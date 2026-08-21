@@ -11,26 +11,26 @@ export function SkullCard({ skull }: SkullCardProps) {
   const paymentLabel = PAYMENT_OPTIONS.find(p => p.value === skull.payment_option)?.label
 
   return (
-    <div className="border rounded-xl p-4 space-y-3 bg-white shadow-sm">
+    <div className="rounded-lg p-5 space-y-3 bg-gray-50 shadow-sm">
       <div className="flex justify-between items-start">
         <div>
-          <p className="font-semibold">
+          <p className="font-semibold text-gray-900">
             {skull.points ? `${skull.points}-Point Skull` : 'Skull'}
           </p>
           {skull.dnr_tag_number && (
-            <p className="text-sm text-gray-700">DNR Tag: {skull.dnr_tag_number}</p>
+            <p className="text-sm text-gray-600">DNR Tag: {skull.dnr_tag_number}</p>
           )}
-          <p className="text-sm text-gray-700">
+          <p className="text-sm text-gray-600">
             Received: {new Date(skull.date_received).toLocaleDateString()}
           </p>
         </div>
         {skull.price != null && (
           <div className="text-right text-sm">
-            <p className="font-medium">${skull.price.toFixed(2)}</p>
+            <p className="font-semibold text-gray-900">${skull.price.toFixed(2)}</p>
             {balance != null && balance > 0 && (
-              <p className="text-orange-600">Balance: ${balance.toFixed(2)}</p>
+              <p className="text-orange-600 font-medium">Balance: ${balance.toFixed(2)}</p>
             )}
-            {balance === 0 && <p className="text-green-600">Paid in Full</p>}
+            {balance === 0 && <p className="text-green-600 font-medium">Paid in Full</p>}
             {paymentLabel && <p className="text-gray-600 text-xs">{paymentLabel}</p>}
           </div>
         )}

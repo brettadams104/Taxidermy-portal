@@ -68,33 +68,39 @@ export default async function AdminDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Clients */}
         <Link href="/admin/clients" className="group">
-          <div className="rounded-xl p-6 h-full border-2 hover:shadow-xl transition-all" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
-            <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>Total Clients</p>
-            <p className="text-4xl font-black mb-2" style={{ color: 'var(--primary)' }}>{totalClients}</p>
-            <p className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>View all</p>
+          <div className="rounded-xl p-8 h-full bg-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300" style={{ backgroundColor: 'var(--surface)' }}>
+            <p className="text-xs font-bold uppercase tracking-wider mb-6" style={{ color: 'var(--text-muted)' }}>Total Clients</p>
+            <p className="text-5xl font-black mb-3" style={{ color: 'var(--primary)' }}>{totalClients}</p>
+            <p className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>View all →</p>
           </div>
         </Link>
 
         {/* Completed Skulls */}
         <Link href="/admin/skulls/finished" className="group">
-          <div className="rounded-xl p-6 h-full border-2 hover:shadow-xl transition-all" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
-            <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>Completed</p>
-            <p className="text-4xl font-black mb-2" style={{ color: 'var(--accent)' }}>{completedCount}</p>
-            <p className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>View all</p>
+          <div className="rounded-xl p-8 h-full bg-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300" style={{ backgroundColor: 'var(--surface)' }}>
+            <p className="text-xs font-bold uppercase tracking-wider mb-6" style={{ color: 'var(--text-muted)' }}>Completed</p>
+            <p className="text-5xl font-black mb-3" style={{ color: 'var(--accent)' }}>{completedCount}</p>
+            <p className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>View all →</p>
           </div>
         </Link>
 
 
         {/* Outstanding Balance */}
-        <div className="rounded-xl p-6 border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
-          <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>Outstanding</p>
-          <p className="text-3xl font-black" style={{ color: totalOutstanding > 0 ? 'var(--danger)' : 'var(--success)' }}>${totalOutstanding.toFixed(0)}</p>
+        <div className="rounded-xl p-8 bg-white shadow-md" style={{ backgroundColor: 'var(--surface)' }}>
+          <p className="text-xs font-bold uppercase tracking-wider mb-6" style={{ color: 'var(--text-muted)' }}>Outstanding</p>
+          <p className="text-5xl font-black" style={{ color: totalOutstanding > 0 ? 'var(--danger)' : 'var(--success)' }}>${totalOutstanding.toFixed(0)}</p>
+        </div>
+
+        {/* In Progress Count */}
+        <div className="rounded-xl p-8 bg-white shadow-md" style={{ backgroundColor: 'var(--surface)' }}>
+          <p className="text-xs font-bold uppercase tracking-wider mb-6" style={{ color: 'var(--text-muted)' }}>In Progress</p>
+          <p className="text-5xl font-black" style={{ color: 'var(--primary)' }}>{inProgressCount}</p>
         </div>
       </div>
 
       {/* Analytics Section */}
       <Link href="/admin/stats" className="group">
-        <div className="rounded-xl p-6 border-2 hover:shadow-xl transition-all" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+        <div className="rounded-xl p-8 bg-white shadow-md hover:shadow-lg transition-all duration-300 group-hover:scale-102" style={{ backgroundColor: 'var(--surface)' }}>
           <div className="flex items-center justify-between">
             <div>
               <p className="font-bold text-lg" style={{ color: 'var(--text)' }}>Business Stats & Trends</p>
@@ -113,9 +119,9 @@ export default async function AdminDashboardPage() {
 
       {/* Active Projects */}
       <div>
-        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--primary)' }}>Active Projects</h2>
+        <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--primary)' }}>Active Projects</h2>
         {!activeProjects?.length && (
-          <div className="rounded-xl p-12 text-center border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+          <div className="rounded-xl p-12 text-center bg-white shadow-sm" style={{ backgroundColor: 'var(--surface)' }}>
             <p style={{ color: 'var(--text-muted)' }}>No active projects</p>
           </div>
         )}
@@ -124,8 +130,8 @@ export default async function AdminDashboardPage() {
             const profile = project.profiles as { name: string | null } | null
             const skull = project as unknown as Skull
             return (
-              <div key={project.id} className="rounded-xl p-6 border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
-                <div className="mb-4">
+              <div key={project.id} className="rounded-xl p-8 bg-white shadow-sm hover:shadow-md transition-shadow duration-300" style={{ backgroundColor: 'var(--surface)' }}>
+                <div className="mb-6">
                   <p className="font-bold text-lg" style={{ color: 'var(--text)' }}>
                     {profile?.name ?? 'Unnamed Client'}
                   </p>
@@ -189,9 +195,9 @@ export default async function AdminDashboardPage() {
 
       {/* Ready for Pickup */}
       <div>
-        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--primary)' }}>Ready for Pickup</h2>
+        <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--primary)' }}>Ready for Pickup</h2>
         {!readyForPickupSkulls?.length && (
-          <div className="rounded-xl p-12 text-center border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+          <div className="rounded-xl p-12 text-center bg-white shadow-sm" style={{ backgroundColor: 'var(--surface)' }}>
             <p style={{ color: 'var(--text-muted)' }}>No skulls ready for pickup</p>
           </div>
         )}
@@ -199,8 +205,8 @@ export default async function AdminDashboardPage() {
           {readyForPickupSkulls?.map(skull => {
             const profile = skull.profiles as { name: string | null } | null
             return (
-              <div key={skull.id} className="rounded-xl p-6 border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
-                <div className="mb-4">
+              <div key={skull.id} className="rounded-xl p-8 bg-white shadow-sm hover:shadow-md transition-shadow duration-300" style={{ backgroundColor: 'var(--surface)' }}>
+                <div className="mb-6">
                   <p className="font-bold text-lg" style={{ color: 'var(--text)' }}>
                     {profile?.name ?? 'Unnamed Client'}
                   </p>
@@ -241,9 +247,9 @@ export default async function AdminDashboardPage() {
       {/* Final Stage Projects - Hidden if finalStage is "Picked Up" */}
       {finalStage !== 'Picked Up' && (
         <div>
-          <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--primary)' }}>{finalStage}</h2>
+          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--primary)' }}>{finalStage}</h2>
           {!completedSkulls?.length && (
-            <div className="rounded-xl p-12 text-center border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+            <div className="rounded-xl p-12 text-center bg-white shadow-sm" style={{ backgroundColor: 'var(--surface)' }}>
               <p style={{ color: 'var(--text-muted)' }}>No projects in {finalStage} stage</p>
             </div>
           )}
@@ -254,8 +260,8 @@ export default async function AdminDashboardPage() {
                                       (skull as any)
               const profile = (skullWithProfile as any)?.profiles as { name: string | null } | null
               return (
-                <div key={skull.id} className="rounded-xl p-6 border-2" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
-                  <div className="mb-4">
+                <div key={skull.id} className="rounded-xl p-8 bg-white shadow-sm hover:shadow-md transition-shadow duration-300" style={{ backgroundColor: 'var(--surface)' }}>
+                  <div className="mb-6">
                     <p className="font-bold text-lg" style={{ color: 'var(--text)' }}>
                       {profile?.name ?? 'Unnamed Client'} - {finalStage}
                     </p>

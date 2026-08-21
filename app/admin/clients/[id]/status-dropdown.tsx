@@ -35,7 +35,7 @@ export function StatusDropdown({ skullId, currentStatus, stages }: Props) {
         value={status}
         onChange={(e) => handleChange(e.target.value)}
         disabled={loading}
-        className="w-full px-3 py-2 border rounded-lg text-sm font-medium disabled:opacity-50 cursor-pointer"
+        className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm font-semibold text-gray-900 disabled:opacity-50 cursor-pointer hover:border-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
       >
         {stages.map((s) => (
           <option key={s} value={s}>
@@ -43,7 +43,7 @@ export function StatusDropdown({ skullId, currentStatus, stages }: Props) {
           </option>
         ))}
       </select>
-      {error && <p className="text-red-600 text-xs">{error}</p>}
+      {error && <p className="text-red-600 text-sm font-medium">{error}</p>}
     </div>
   )
 }

@@ -29,26 +29,28 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     .order('created_at', { ascending: false })
 
   return (
-    <div className="space-y-4">
-      <Link href="/admin/clients" className="text-blue-600 hover:underline text-sm">← All Clients</Link>
+    <div className="space-y-6">
+      <Link href="/admin/clients" className="text-blue-600 hover:text-blue-700 text-sm font-medium">← Back to Clients</Link>
 
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between pb-4 border-b border-gray-200">
         <div>
-          <h1 className="text-2xl font-bold">{profile.name ?? 'Unnamed Client'}</h1>
-          <p className="text-sm text-gray-700">{user?.email}</p>
-          {profile.phone && <p className="text-sm text-gray-700">{profile.phone}</p>}
-          {profile.address && <p className="text-sm text-gray-700">{profile.address}</p>}
+          <h1 className="text-3xl font-black text-gray-900">{profile.name ?? 'Unnamed Client'}</h1>
+          <div className="mt-3 space-y-1">
+            {user?.email && <p className="text-sm text-gray-600">{user.email}</p>}
+            {profile.phone && <p className="text-sm text-gray-600">{profile.phone}</p>}
+            {profile.address && <p className="text-sm text-gray-600">{profile.address}</p>}
+          </div>
         </div>
-        <div className="flex gap-2 shrink-0">
+        <div className="flex gap-3 shrink-0">
           <Link
             href={`/admin/clients/${id}/edit`}
-            className="border px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50"
+            className="border border-gray-300 px-5 py-3 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
           >
             Edit
           </Link>
           <Link
             href={`/admin/clients/${id}/skulls/new`}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+            className="bg-blue-600 text-white px-5 py-3 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-all shadow-sm hover:shadow-md"
           >
             + Add Skull
           </Link>
@@ -57,8 +59,8 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
       {/* Portal Access Section */}
       {profile.email && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <p className="text-sm font-medium text-blue-900 mb-3">Portal Access</p>
+        <div className="bg-gradient-to-br from-blue-50 to-blue-50 rounded-xl p-6 border border-blue-200 shadow-sm">
+          <p className="text-sm font-semibold text-blue-900 mb-4">Portal Access</p>
           <InviteButton clientId={id} clientEmail={profile.email} />
         </div>
       )}
@@ -96,26 +98,26 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
             {/* Payment Section */}
             {skull.price != null && (
-              <div className="border rounded-lg p-3 bg-gray-50 space-y-2">
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Price</span>
-                    <span className="font-medium">${skull.price.toFixed(2)}</span>
+              <div className="rounded-lg p-5 bg-gray-50 space-y-4 border border-gray-200 shadow-sm">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-700">Price</span>
+                    <span className="font-semibold text-gray-900">${skull.price.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Paid</span>
-                    <span className="font-medium">${(skull.amount_paid ?? 0).toFixed(2)}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-700">Paid</span>
+                    <span className="font-semibold text-green-600">${(skull.amount_paid ?? 0).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between font-semibold border-t pt-2">
-                    <span>Balance</span>
-                    <span>${Math.max(0, skull.price - (skull.amount_paid ?? 0)).toFixed(2)}</span>
+                  <div className="flex justify-between items-center font-semibold border-t border-gray-300 pt-3 mt-2">
+                    <span className="text-gray-900">Balance</span>
+                    <span className="text-gray-900">${Math.max(0, skull.price - (skull.amount_paid ?? 0)).toFixed(2)}</span>
                   </div>
                 </div>
                 <LogPaymentForm skullId={skull.id} />
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
               <StatusDropdown skullId={skull.id} currentStatus={skull.status as SkullStatus} stages={stages} />
               <AdvanceStatusButton
                 skullId={skull.id}
@@ -126,7 +128,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
               />
               <Link
                 href={`/admin/skulls/${skull.id}/edit`}
-                className="text-sm border rounded-lg px-4 py-2 hover:bg-gray-50 text-center"
+                className="text-sm font-semibold border border-gray-300 rounded-lg px-4 py-3 hover:bg-gray-50 transition-colors text-center"
               >
                 Edit
               </Link>

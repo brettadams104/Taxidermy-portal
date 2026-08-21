@@ -19,9 +19,9 @@ export function LogPaymentForm({ skullId }: { skullId: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
+    <form onSubmit={handleSubmit} className="flex gap-3">
       <div className="relative flex-1">
-        <span className="absolute left-3 top-2 text-gray-700 text-sm">$</span>
+        <span className="absolute left-4 top-3 text-gray-600 text-sm font-medium">$</span>
         <input
           type="number"
           min="0.01"
@@ -30,15 +30,15 @@ export function LogPaymentForm({ skullId }: { skullId: string }) {
           onChange={e => setAmount(e.target.value)}
           placeholder="Amount received"
           required
-          className="w-full border rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-gray-300 rounded-lg pl-8 pr-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 transition-all"
         />
       </div>
       <button
         type="submit"
         disabled={loading || !amount}
-        className="bg-green-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+        className="bg-green-600 text-white rounded-lg px-6 py-3 text-sm font-semibold hover:bg-green-700 disabled:opacity-50 transition-all shadow-sm hover:shadow-md"
       >
-        {loading ? '...' : 'Log Payment'}
+        {loading ? 'Processing...' : 'Log Payment'}
       </button>
     </form>
   )

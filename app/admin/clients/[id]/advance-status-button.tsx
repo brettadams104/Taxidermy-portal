@@ -57,38 +57,38 @@ export function AdvanceStatusButton({ skullId, currentStatus, stages, price, amo
       <button
         onClick={handleClick}
         disabled={loading}
-        className="w-full text-sm rounded-lg py-2 font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+        className="w-full text-sm rounded-lg py-3 font-semibold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-all shadow-sm hover:shadow-md"
       >
         {loading ? 'Updating...' : `Advance → ${nextStatus}`}
       </button>
-      {error && <p className="text-red-600 text-xs mt-1">{error}</p>}
+      {error && <p className="text-red-600 text-sm font-medium mt-2">{error}</p>}
 
       {showPaymentModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-sm shadow-lg space-y-4">
-            <h3 className="text-lg font-bold">Complete Payment?</h3>
-            <div className="space-y-2 text-sm">
+          <div className="bg-white p-8 rounded-xl max-w-sm shadow-xl space-y-5">
+            <h3 className="text-lg font-bold text-gray-900">Complete Payment?</h3>
+            <div className="space-y-3 text-sm">
               <p className="text-gray-700">
                 This skull is being moved to <strong>{nextStatus}</strong>.
               </p>
-              <div className="bg-gray-50 p-3 rounded space-y-1">
-                <p className="text-gray-600">Total: <span className="font-medium">${price?.toFixed(2)}</span></p>
-                <p className="text-gray-600">Paid: <span className="font-medium">${amountPaid?.toFixed(2)}</span></p>
-                <p className="text-red-600 font-medium">Outstanding: ${((price ?? 0) - (amountPaid ?? 0)).toFixed(2)}</p>
+              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                <p className="text-gray-700">Total: <span className="font-semibold text-gray-900">${price?.toFixed(2)}</span></p>
+                <p className="text-gray-700">Paid: <span className="font-semibold text-gray-900">${amountPaid?.toFixed(2)}</span></p>
+                <p className="text-red-600 font-semibold">Outstanding: ${((price ?? 0) - (amountPaid ?? 0)).toFixed(2)}</p>
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-2">
               <button
                 onClick={() => handleAdvance(false)}
                 disabled={loading}
-                className="flex-1 px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 disabled:opacity-50 text-sm font-medium"
+                className="flex-1 px-4 py-3 bg-gray-400 text-white rounded-lg hover:bg-gray-500 disabled:opacity-50 text-sm font-semibold transition-all"
               >
                 {loading ? '...' : 'No, Keep Balance'}
               </button>
               <button
                 onClick={() => handleAdvance(true)}
                 disabled={loading}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 text-sm font-medium"
+                className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm font-semibold transition-all"
               >
                 {loading ? '...' : 'Yes, Mark Paid'}
               </button>

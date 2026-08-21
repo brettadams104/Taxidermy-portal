@@ -48,14 +48,14 @@ export function EditClientForm({ clientId, profile }: Props) {
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white border rounded-xl p-4 shadow-sm">
+      <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-xl p-8 shadow-md">
         <div>
-          <label className="block text-sm font-medium mb-1">Email (optional)</label>
+          <label className="block text-sm font-semibold mb-2 text-gray-900">Email (optional)</label>
           <input
             name="email"
             type="email"
             defaultValue={profile.email ?? ''}
-            className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-blue-500 transition-all"
           />
         </div>
         {[
@@ -64,48 +64,50 @@ export function EditClientForm({ clientId, profile }: Props) {
           { name: 'address', label: 'Address', type: 'text', value: profile.address },
         ].map(field => (
           <div key={field.name}>
-            <label className="block text-sm font-medium mb-1">{field.label} (optional)</label>
+            <label className="block text-sm font-semibold mb-2 text-gray-900">{field.label} (optional)</label>
             <input
               name={field.name}
               type={field.type}
               defaultValue={field.value ?? ''}
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-blue-500 transition-all"
             />
           </div>
         ))}
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+        {error && <p className="text-red-600 text-sm font-medium">{error}</p>}
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white rounded-lg py-2 font-medium hover:bg-blue-700 disabled:opacity-50"
+          className="w-full bg-blue-600 text-white rounded-lg py-3 font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all shadow-sm hover:shadow-md"
         >
           {loading ? 'Saving...' : 'Save Changes'}
         </button>
         <button
           type="button"
           onClick={() => router.back()}
-          className="w-full border rounded-lg py-2 font-medium hover:bg-gray-50"
+          className="w-full border border-gray-300 rounded-lg py-3 font-semibold hover:bg-gray-50 transition-colors"
         >
           Cancel
         </button>
       </form>
 
       {/* Delete section */}
-      <div className="bg-white border border-red-200 rounded-xl p-4 shadow-sm space-y-3">
-        <p className="text-sm font-medium text-red-600">Delete Client</p>
-        <p className="text-xs text-gray-500">This will permanently delete the client and all their skulls. This cannot be undone.</p>
+      <div className="bg-white rounded-xl p-8 shadow-md space-y-4 border border-red-100">
+        <div>
+          <p className="text-sm font-semibold text-red-600">Delete Client</p>
+          <p className="text-sm text-gray-600 mt-1">This will permanently delete the client and all their skulls. This cannot be undone.</p>
+        </div>
         {confirming ? (
-          <div className="flex gap-2">
+          <div className="flex gap-3 pt-2">
             <button
               onClick={handleDelete}
               disabled={deleting}
-              className="flex-1 bg-red-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-red-700 disabled:opacity-50"
+              className="flex-1 bg-red-600 text-white rounded-lg py-3 text-sm font-semibold hover:bg-red-700 disabled:opacity-50 transition-all shadow-sm hover:shadow-md"
             >
               {deleting ? 'Deleting...' : 'Yes, Delete'}
             </button>
             <button
               onClick={() => setConfirming(false)}
-              className="flex-1 border rounded-lg py-2 text-sm font-medium hover:bg-gray-50"
+              className="flex-1 border border-gray-300 rounded-lg py-3 text-sm font-semibold hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
@@ -113,7 +115,7 @@ export function EditClientForm({ clientId, profile }: Props) {
         ) : (
           <button
             onClick={() => setConfirming(true)}
-            className="w-full border border-red-300 text-red-600 rounded-lg py-2 text-sm font-medium hover:bg-red-50"
+            className="w-full border border-red-300 text-red-600 rounded-lg py-3 text-sm font-semibold hover:bg-red-50 transition-colors"
           >
             Delete Client
           </button>
