@@ -3,6 +3,15 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
+import {
+  DashboardIcon,
+  ClientsIcon,
+  AnalyticsIcon,
+  WorkflowIcon,
+  TemplatesIcon,
+  AccountIcon,
+  SignOutIcon,
+} from './icons'
 
 interface Props {
   signOut: () => Promise<void>
@@ -13,12 +22,12 @@ export function AdminSidebar({ signOut }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const navItems = [
-    { href: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
-    { href: '/admin/clients', label: 'Clients', icon: '👥' },
-    { href: '/admin/stats', label: 'Analytics', icon: '📈' },
-    { href: '/admin/settings/stages', label: 'Workflow', icon: '⚙️' },
-    { href: '/admin/settings/notifications', label: 'Templates', icon: '📝' },
-    { href: '/admin/settings/account', label: 'Account', icon: '🔧' },
+    { href: '/admin/dashboard', label: 'Dashboard', Icon: DashboardIcon },
+    { href: '/admin/clients', label: 'Clients', Icon: ClientsIcon },
+    { href: '/admin/stats', label: 'Analytics', Icon: AnalyticsIcon },
+    { href: '/admin/settings/stages', label: 'Workflow', Icon: WorkflowIcon },
+    { href: '/admin/settings/notifications', label: 'Templates', Icon: TemplatesIcon },
+    { href: '/admin/settings/account', label: 'Account', Icon: AccountIcon },
   ]
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
@@ -44,21 +53,24 @@ export function AdminSidebar({ signOut }: Props) {
         style={{ borderRightColor: 'var(--border)', backgroundColor: 'var(--surface)' }}
       >
         <nav className="space-y-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                isActive(item.href)
-                  ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600 pl-3'
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              <span className="text-lg">{item.icon}</span>
-              {item.label}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const Icon = item.Icon
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                  isActive(item.href)
+                    ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600 pl-3'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Icon />
+                {item.label}
+              </Link>
+            )
+          })}
         </nav>
 
         {/* Divider */}
@@ -70,7 +82,7 @@ export function AdminSidebar({ signOut }: Props) {
             type="submit"
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-all"
           >
-            <span className="text-lg">🚪</span>
+            <SignOutIcon />
             Sign Out
           </button>
         </form>
