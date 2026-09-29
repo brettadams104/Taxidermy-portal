@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireBusiness } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { SkullCard } from '@/components/skull-card'
+import { StatCard } from '@/components/stat-card'
 import { AdvanceStatusButton } from '@/app/admin/clients/[id]/advance-status-button'
 import { StagesDropdown } from './stages-dropdown'
 import { getAllSkullsByBusiness, getSkullsInProgressWithClients, getSkullsByStatus } from '@/lib/queries/skulls'
@@ -54,48 +55,72 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 pb-6 border-b" style={{ borderBottomColor: 'var(--border)' }}>
         <div>
-          <h1 className="text-4xl font-black" style={{ color: 'var(--primary)' }}>Dashboard</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Manage your European mount projects</p>
+          <h1 className="text-4xl font-black bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 bg-clip-text text-transparent">Dashboard</h1>
+          <p className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>Manage your European mount projects and track progress</p>
         </div>
-        <Link href="/admin/clients/new" className="text-white font-semibold px-6 py-3 rounded-lg transition-all hover:shadow-lg" style={{ backgroundColor: 'var(--primary)' }}>
-          + New Client
+        <Link href="/admin/clients/new" className="inline-flex items-center gap-2 text-white font-semibold px-6 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-md hover:shadow-lg transition-all active:scale-95">
+          <span>+</span>
+          <span>New Client</span>
         </Link>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Clients */}
-        <Link href="/admin/clients" className="group">
-          <div className="rounded-xl p-8 h-full bg-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300" style={{ backgroundColor: 'var(--surface)' }}>
-            <p className="text-xs font-bold uppercase tracking-wider mb-6" style={{ color: 'var(--text-muted)' }}>Total Clients</p>
-            <p className="text-5xl font-black mb-3" style={{ color: 'var(--primary)' }}>{totalClients}</p>
-            <p className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>View all →</p>
-          </div>
+        <Link href="/admin/clients">
+          <StatCard
+            label="Total Clients"
+            value={totalClients}
+            variant="primary"
+            icon={
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zM6 20a6 6 0 0112 0v2H6v-2z" />
+              </svg>
+            }
+          />
         </Link>
 
         {/* Completed Skulls */}
-        <Link href="/admin/skulls/finished" className="group">
-          <div className="rounded-xl p-8 h-full bg-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300" style={{ backgroundColor: 'var(--surface)' }}>
-            <p className="text-xs font-bold uppercase tracking-wider mb-6" style={{ color: 'var(--text-muted)' }}>Completed</p>
-            <p className="text-5xl font-black mb-3" style={{ color: 'var(--accent)' }}>{completedCount}</p>
-            <p className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>View all →</p>
-          </div>
+        <Link href="/admin/skulls/finished">
+          <StatCard
+            label="Completed Projects"
+            value={completedCount}
+            variant="success"
+            icon={
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+          />
         </Link>
 
-
         {/* Outstanding Balance */}
-        <div className="rounded-xl p-8 bg-white shadow-md" style={{ backgroundColor: 'var(--surface)' }}>
-          <p className="text-xs font-bold uppercase tracking-wider mb-6" style={{ color: 'var(--text-muted)' }}>Outstanding</p>
-          <p className="text-5xl font-black" style={{ color: totalOutstanding > 0 ? 'var(--danger)' : 'var(--success)' }}>${totalOutstanding.toFixed(0)}</p>
-        </div>
+        <StatCard
+          label="Outstanding"
+          value={`$${totalOutstanding.toFixed(0)}`}
+          variant={totalOutstanding > 0 ? 'danger' : 'success'}
+          icon={
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{
+              color: totalOutstanding > 0 ? '#dc2626' : '#059669'
+            }}>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          }
+        />
 
-        {/* In Progress Count */}
-        <div className="rounded-xl p-8 bg-white shadow-md" style={{ backgroundColor: 'var(--surface)' }}>
-          <p className="text-xs font-bold uppercase tracking-wider mb-6" style={{ color: 'var(--text-muted)' }}>In Progress</p>
-          <p className="text-5xl font-black" style={{ color: 'var(--primary)' }}>{inProgressCount}</p>
-        </div>
+        {/* In Progress */}
+        <StatCard
+          label="In Progress"
+          value={inProgressCount}
+          variant="warning"
+          icon={
+            <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          }
+        />
       </div>
 
       {/* Analytics Section */}
