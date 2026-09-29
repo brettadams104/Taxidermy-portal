@@ -10,8 +10,11 @@ export default async function EditSkullPage({ params }: { params: Promise<{ id: 
   if (!skull) notFound()
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Edit Skull</h1>
+    <div className="space-y-6">
+      <div className="pb-6 border-b" style={{ borderBottomColor: 'var(--border)' }}>
+        <h1 className="text-3xl font-black bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 bg-clip-text text-transparent">Edit Skull</h1>
+        <p className="text-sm text-gray-600 mt-2">Update skull details or delete this entry</p>
+      </div>
       <EditSkullForm skull={skull} />
     </div>
   )

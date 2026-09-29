@@ -196,3 +196,25 @@ export async function updateSkullStatusDirect(skullId: string, newStatus: string
   revalidatePath(`/admin/skulls/pending-pickup`)
   revalidatePath(`/admin/skulls/finished`)
 }
+
+export async function deleteSkull(skullId: string) {
+  const supabase = await createClient()
+
+  const { data: skull, error: fetchError } = await supabase
+    .from('skulls')
+    .select('client_id')
+    .eq('id', skullId)
+    .single()
+
+  if (fetchError || !skull) throw new Error('Skull not found')
+
+  const { error: deleteError } = await supabase
+    .from('skulls')
+    .delete()
+    .eq('id', skullId)
+
+  if (deleteError) throw new Error(deleteError.message)
+
+  revalidatePath(`/admin/clients/${skull.client_id}`)
+  revalidatePath(`/admin/dashboard`)
+}
