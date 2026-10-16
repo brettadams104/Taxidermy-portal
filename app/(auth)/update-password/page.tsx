@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -12,6 +12,24 @@ export default function UpdatePasswordPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [checkingAuth, setCheckingAuth] = useState(true)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (session) {
+        setIsAuthenticated(true)
+      } else {
+        setError('Your reset link has expired. Please request a new password reset.')
+      }
+      setCheckingAuth(false)
+    }
+
+    checkAuth()
+  }, [])
 
   async function handleUpdatePassword(e: React.FormEvent) {
     e.preventDefault()
@@ -51,6 +69,23 @@ export default function UpdatePasswordPage() {
     }
   }
 
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{
+        background: 'linear-gradient(135deg, var(--background) 0%, var(--background-alt) 100%)'
+      }}>
+        <div className="w-full max-w-sm text-center">
+          <div className="animate-spin">
+            <svg className="w-12 h-12 mx-auto text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <p className="text-gray-600 mt-4">Verifying your reset link...</p>
+        </div>
+      </div>
+    )
+  }
+
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4" style={{
@@ -67,6 +102,31 @@ export default function UpdatePasswordPage() {
             Your password has been successfully reset. You can now sign in with your new password.
           </p>
           <p className="text-sm text-gray-500">Redirecting to sign in...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{
+        background: 'linear-gradient(135deg, var(--background) 0%, var(--background-alt) 100%)'
+      }}>
+        <div className="w-full max-w-sm">
+          <div className="bg-white rounded-xl p-8 shadow-md border border-red-200">
+            <div className="mb-4">
+              <svg className="w-12 h-12 mx-auto text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4v2m0 0v2m0-6v2m6-8h.01M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+              </svg>
+            </div>
+            <h1 className="text-xl font-bold mb-2 text-gray-900 text-center">Link Expired</h1>
+            <p className="text-gray-600 mb-6 text-center">
+              {error || 'Your password reset link has expired. Please request a new one.'}
+            </p>
+            <Link href="/reset-password" className="w-full block text-center bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg py-3 font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-sm hover:shadow-md">
+              Request New Reset Link
+            </Link>
+          </div>
         </div>
       </div>
     )
