@@ -8,6 +8,7 @@ import {
   ClientsIcon,
   AnalyticsIcon,
   WorkflowIcon,
+  PasswordIcon,
   AccountIcon,
   SignOutIcon,
 } from './icons'
@@ -25,6 +26,7 @@ export function AdminSidebar({ signOut }: Props) {
     { href: '/admin/clients', label: 'Clients', Icon: ClientsIcon },
     { href: '/admin/stats', label: 'Analytics', Icon: AnalyticsIcon },
     { href: '/admin/settings/stages', label: 'Workflow', Icon: WorkflowIcon },
+    { href: '/admin/settings/password', label: 'Reset Password', Icon: PasswordIcon },
     { href: '/admin/settings/account', label: 'Account', Icon: AccountIcon },
   ]
 
