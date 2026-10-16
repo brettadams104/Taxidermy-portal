@@ -5,7 +5,14 @@ import { NextResponse, type NextRequest } from 'next/server'
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/admin/dashboard'
+  const type = searchParams.get('type')
+  const next = searchParams.get('next')
+
+  // Determine redirect based on auth type
+  let redirectTo = next ?? '/admin/dashboard'
+  if (type === 'recovery') {
+    redirectTo = '/auth/update-password'
+  }
 
   if (code) {
     const cookieStore = await cookies()
@@ -24,7 +31,7 @@ export async function GET(request: NextRequest) {
       }
     )
     const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) return NextResponse.redirect(`${origin}${next}`)
+    if (!error) return NextResponse.redirect(`${origin}${redirectTo}`)
   }
 
   return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`)
