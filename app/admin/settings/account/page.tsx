@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireBusiness } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { AccountForm } from './account-form'
+import { SeedDemoButton } from './seed-demo-button'
 
 export default async function AccountSettingsPage() {
   const business = await requireBusiness()
@@ -68,6 +69,12 @@ export default async function AccountSettingsPage() {
             <p className="font-mono text-sm bg-gray-50 p-2 rounded">{business.business_identifier}</p>
           </div>
         </div>
+      </div>
+
+      {/* Demo Data Section */}
+      <div className="bg-white border rounded-xl p-6 shadow-sm space-y-4">
+        <h2 className="text-lg font-semibold">Demo Data</h2>
+        <SeedDemoButton />
       </div>
 
       {/* Support Section */}
